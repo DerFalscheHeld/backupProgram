@@ -588,9 +588,9 @@ function execution {
           tar czf "$execPath/${date}_${execStartTime}/${date}__start_${execStartTime}__name_${execName}.tar.gz.part" *
         ) >> $execLogfile
         execEndTime=`date +"%H:%M"`
+        echo "[`date +"%Y-%m-%d %H:%M"`] END tar and gzip" >> $execLogfile
         echo -n "[`date +"%Y-%m-%d %H:%M"`] [mv] : " >> $execLogfile
         mv -v "${date}__start_${execStartTime}__name_${execName}.tar.gz.part" "${date}__start_${execStartTime}__end_${execEndTime}__name_${execName}.tar.gz" >> $execLogfile
-        echo "[`date +"%Y-%m-%d %H:%M"`] END tar and gzip" >> $execLogfile
       elif [[ "$flagZip" = "zip" ]] && [[ "$flagTar" = "" ]] && [[ "$flagImg" = "" ]] ; then
         echo "[`date +"%Y-%m-%d %H:%M"`] START gzip" >> $execLogfile
         gzip -v * >> $execLogfile
@@ -602,9 +602,9 @@ function execution {
           tar cf "$execPath/${date}_${execStartTime}/${date}__start_${execStartTime}__name_${execName}.tar.part" *
         ) >> $execLogfile
         execEndTime=`date +"%H:%M"`
+        echo "[`date +"%Y-%m-%d %H:%M"`] END tar" >> $execLogfile
         echo -n "[`date +"%Y-%m-%d %H:%M"`] [mv] : " >> $execLogfile
         mv -v "${date}__start_${execStartTime}__name_${execName}.tar.part" "${date}__start_${execStartTime}__end_${execEndTime}__name_${execName}.tar" >> $execLogfile
-        echo "[`date +"%Y-%m-%d %H:%M"`] END tar" >> $execLogfile
       fi
 
       echo -e "[`date +"%Y-%m-%d %H:%M"`] END Backup\n" >> $execLogfile
