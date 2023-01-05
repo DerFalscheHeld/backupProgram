@@ -190,7 +190,7 @@ function renderListTemp {
 function renderList {
 
   renderListTemp $1 > $tempDir/.renderList.temp.1
-  column $tempDir/.renderList.temp.1 -c -e -t -s "$separator" > $tempDir/.renderList.temp.2
+  column $tempDir/.renderList.temp.1 -e -t -s "$separator" > $tempDir/.renderList.temp.2
   cat $tempDir/.renderList.temp.2 > $tempDir/.renderList.temp.1
   sed -i "2,130d" $tempDir/.renderList.temp.1
   sed -i "1d" $tempDir/.renderList.temp.2
