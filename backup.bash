@@ -676,7 +676,7 @@ while : ; do
 
   while : ; do
     if [[ "`echo $2 | cut -b $count`" = "#" ]] || [[ "`echo $3 | cut -b $count`" = "#" ]] || [[ "`echo $4 | cut -b $count`" = "#" ]] || [[ "`echo $5 | cut -b $count`" = "#" ]] || [[ "`echo $6 | cut -b $count`" = "#" ]] ; then
-      echo -e "\n\033[31mError : \033[33mThe character '#' is not allowed!\n"
+      echo -e "\n\033[31mError : \033[33mThe character '#' is not allowed!\n\033[0m"
       return
       break
     fi
@@ -1066,3 +1066,4 @@ while : ; do
             ;;
   esac
 done
+echo -e -n "\033[0m"
