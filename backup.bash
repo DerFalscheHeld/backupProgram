@@ -226,38 +226,75 @@ function renderHelp {
 
     re   [1-99]   >> Restore backup from trashbin with ID [1-99]
 
-    deact [1-99]  >>
-    react [1-99]  >>
+    deact [1-99]  >> Deactivate backup with ID [1-99]
+    
+    react [1-99]  >> Reactivate backup with ID [1-99]
 
-    path [Path]   >>
+    path [Path]   >> Change standard backup path
 
     log [1-99]    >> shows all logs from the ID [1-99] in less
 
     exec          >> for daily execute use cron syntax | \033[36m0 0 * * * /usr/local/bin/backup exec  \033[37m
+    
     execAll       >> execute all backups now
 
     prog          >> programming a new backup
 
     help / -h / --help      >> shows this screen
 
-    --restoreProgram [file] []      >>
-                            [--yes] >>
+    --restoreProgram [file] []      >> Restore program from backup file
+                            [--yes] >> ... and skip confirmation by auto-affirming restoration
 
-    --deleteAllProgramFiles []      >> asks you 
-                            [--yes] >> delete all program Files
+    --deleteAllProgramFiles []      >> delete all program Files
+                            [--yes] >> ... and skip confirmation by auto-affirming deletion
 
   example:
-  backup prog \033[33m[name] \033[36m[flag] \033[35m[d/m/w_to_keep] \033[34m[source/command] \033[37m[destination/exec-path]
+  backup prog \033[33m[name] \033[36m[flag] \033[35m[d/w/m_to_keep] \033[34m[source/command] \033[37m[destination/exec-path]
                 |      |          |                |                    |
                 |      |          |                |                    '->> destinaton path from backup
                 |      |          |                |
                 |      |          |                '->>  source path for backup / command to be executed
                 |      |          |
-                |      |          '->> time to keep the backup [day] or [w[1-7]] or [m[1-31]]
+                |      |          '->> Number of [days or weeks or months] to keep the old backups
                 |      |
-                |      '->> flags (see above)
+                |      '->> flags (see below)
                 |
                 '->>  name of backup
+                
+
+        flags:
+                arguments are seperated by \"/\"
+                e.g.:   /arg1/arg2/arg3/
+                
+                m[1-31] >>  monthly backup
+                
+                w[1-7]  >>  weekly backup
+        
+                day     >>  daily backup
+
+                copy    >>  Supply source path arg
+                            and an optional destination arg
+                       
+                            If no destination path is supplied,
+                            the standard path with [name] is used as destination
+                       
+                            copy <source path> <destination path>
+              
+                bash    >>  Argument after bash will executed in bash
+                            Needs to be supplied with '
+                            Will be executed in exec-path
+                            
+                            bash 'command'
+              
+                img     >>  Save backup as .img file
+              
+                zip     >>  Save backup as .gz archive
+              
+                tar     >>  Save backup as .tar archive
+              
+                log     >>  Create log-file in destination folder                
+  
+    
   " > $helpScreen
   fi
 }
@@ -1092,5 +1129,5 @@ while : ; do
             break
             ;;
   esac
-  echo -e -n "\033[0m"
 done
+echo -e -n "\033[0m"
