@@ -1071,7 +1071,7 @@ while : ; do
               if test -e $2 ; then
                 rm -rf /usr/local/etc/backup
                 touchData
-                cp $2 $programmDir/$backupFileDir/
+                cp $2 $programmDir/$backupFileDir/$backupFile
                 renderAll
               fi
               break
