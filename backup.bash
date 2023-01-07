@@ -216,30 +216,30 @@ function renderHelp {
   backup [option] [arguments.....]
 
   options:
-    ls   []       >> lists all reProgram backups
-         [trash]  >> lists trashbin
-         [deact]  >> lists all deactivated backups
-         [all]    >> lists all 
+    ls []       >> lists all reProgram backups
+       [trash]  >> lists trashbin
+       [deact]  >> lists all deactivated backups
+       [all]    >> lists all 
 
-    rm   [1-99]   >> delete a reProgram Backup with that ID [1-99]
-         [trash]  >> delete the trashbin
-         [deact]  >> delete the deactivation list
+    rm [1-99]   >> delete a reProgram Backup with that ID [1-99]
+       [trash]  >> delete the trashbin
+       [deact]  >> delete the deactivation list
 
-    re   [1-99]   >> Restore backup from trashbin with ID [1-99]
-
-    deact [1-99]  >> Deactivate backup with ID [1-99]
-    
-    react [1-99]  >> Reactivate backup with ID [1-99]
+    re [1-99]   >> Restore backup from trashbin with ID [1-99]
+       
+    log [1-99]   >> shows all logs from the ID [1-99] in less
 
     path [Path]   >> Change standard backup path
 
-    log [1-99]    >> shows all logs from the ID [1-99] in less
-
-    exec          >> for daily execute use cron syntax | \033[36m0 0 * * * /usr/local/bin/backup exec  \033[37m
+    deact [1-99]   >> Deactivate backup with ID [1-99]
     
-    execAll       >> execute all backups now
+    react [1-99]   >> Reactivate backup with ID [1-99]
 
-    prog          >> programming a new backup
+    exec           >> for daily execute use cron syntax | \033[36m0 0 * * * /usr/local/bin/backup exec  \033[37m
+    
+    execAll        >> execute all backups now
+
+    prog           >> programming a new backup
 
     help / -h / --help      >> shows this screen
 
@@ -755,8 +755,7 @@ while : ; do
 
     prog)   programmBackup "$2" "$3" "$4" "$5" "$6"
             break
-            ;;
-
+            ;;    
     exec)   execution >> /dev/null
             break
             ;;
@@ -1132,3 +1131,5 @@ while : ; do
   esac
 done
 echo -e -n "\033[0m"
+
+
