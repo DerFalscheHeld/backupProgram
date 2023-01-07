@@ -5,6 +5,7 @@ if [[ $UID != 0 ]] ; then
   exit
 fi
 
+mkdir -p '/usr/local/bin'
 mkdir -p '/usr/local/etc/backup/temp'
 path='/usr/local/etc/backup/temp/gitClonePath.temp'
 touch $path
@@ -23,5 +24,5 @@ while : ; do
   fi
   count=$(($count+1))
 done
-echo "cp `cat $path` /usr/local/bin/backup"
+cp `cat $path` /usr/local/bin/backup
 rm $path
