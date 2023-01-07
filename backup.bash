@@ -1130,6 +1130,7 @@ while : ; do
             ;;
   esac
 done
-echo -e -n "\033[0m"
-
+if [[ "$1" != "exec" ]] ; then
+  echo -e -n "\033[0m"
+fi
 
