@@ -6,7 +6,7 @@
 
 #  /
 #   m01-31 : monatliches Backup
-#   w1-7   : wöchentliches Backup
+#   w0-6   : wöchentliches Backup
 #   day    : dayly Backup
 #   bash   : bash befehl ausführen    ## bach -c "<string>"
 #   copy   : cp befehl
@@ -198,7 +198,7 @@ function renderList {
   for (( i = 0 ; i <= $allColumnsWidth ; i++ )) ; do
     printf "-" >> $2
   done
-  echo >> $2 
+  echo >> $2
   cat $tempDir/.renderList.temp.2 >> $2
   echo >> $2
   rm -rf $tempDir/.renderList.temp.1 $tempDir/.renderList.temp.2
@@ -223,17 +223,17 @@ function renderHelp {
        [deact]  >> delete the deactivation list
 
     re [1-99]   >> Restore backup from trashbin with ID [1-99]
-       
+
     log [1-99]   >> shows all logs from the ID [1-99] in less
 
     path [Path]   >> Change standard backup path
 
     deact [1-99]   >> Deactivate backup with ID [1-99]
-    
+
     react [1-99]   >> Reactivate backup with ID [1-99]
 
     exec           >> for daily execute use cron syntax | \033[36m0 0 * * * /usr/local/bin/backup exec  \033[37m
-    
+
     execAll        >> execute all backups now
 
     prog           >> programming a new backup
@@ -258,43 +258,43 @@ function renderHelp {
                 |      '->> flags (see below)
                 |
                 '->>  name of backup
-                
+
 
         flags:
                 arguments are seperated by \"/\"
-                e.g.:   /arg1/arg2/arg3/
-                
+                e.g.:   /arg1/arg2/arg3/....
+
                 m[1-31] >>  monthly backup
-                
+
                 w[0-6]  >>  weekly backup
                             0  1  2  3  4  5  6
                             Su Mo Tu We Th Fr Sa
-        
+
                 day     >>  daily backup
 
                 copy    >>  Supply source path arg
                             and an optional destination arg
-                       
+
                             If no destination path is supplied,
                             the standard path with [name] is used as destination
-                       
+
                             copy <source path> <destination path>
-              
+
                 bash    >>  Argument after bash will executed in bash
                             Needs to be supplied with '
                             Will be executed in exec-path
-                            
+
                             bash 'command'
-              
+
                 img     >>  Save backup as .img file
-              
+
                 zip     >>  Save backup as .gz archive
-              
+
                 tar     >>  Save backup as .tar archive
-              
-                log     >>  Create log-file in destination folder                
-  
-    
+
+                log     >>  Create log-file in destination folder
+
+
   " > $helpScreen
   fi
 }
@@ -350,7 +350,7 @@ function programmBackup {
   if [[ "$Flag" = "/" ]] ; then
     while : ; do
       count=$(($count+1))
-      Flag=`echo $2 | cut -d"/" -f$count` 
+      Flag=`echo $2 | cut -d"/" -f$count`
       if [[ "$Flag" = "" ]] ; then
         flag=1
         break
@@ -448,7 +448,7 @@ function programmBackup {
         break
       fi
     fi
-    if [[ "`echo $5 | cut -b $count`" = "" ]] ; then  
+    if [[ "`echo $5 | cut -b $count`" = "" ]] ; then
       break
     fi
     count=$(($count+1))
@@ -467,7 +467,7 @@ function programmBackup {
 
   if [[ $flag -eq 0 && $flagsyntax -eq 1 ]] ; then
     echo -e "\033[31mError : \033[33mFlag : Syntax Error!"
-  elif [[ $flagTimeLess -eq 0 && $flagTimeMany -eq 0 && $flagError -eq 0 ]] ; then            
+  elif [[ $flagTimeLess -eq 0 && $flagTimeMany -eq 0 && $flagError -eq 0 ]] ; then
     if [[ $flag -eq 0 && $flagsyntax -eq 0 ]] ; then
       echo -e "\033[31mError : \033[33mFlag '$Flag' does not exist!"
     else
@@ -562,7 +562,7 @@ function execution {
         readFlag $Flag
       done
     fi
-    
+
     if [[ $breakval -eq 0 ]] || [[ $execAllBackups -eq 1 ]] ; then
 
       date=`date +"%Y-%m-%d"`
@@ -572,9 +572,9 @@ function execution {
       execSource="`echo $line | cut -d"$separator" -f4`"
       execPath="`echo $line | cut -d"$separator" -f5`"
       execLogfile="$tempDir/${date}__start_${execStartTime}__name_$execName.log.temp"
- 
+
       echo -e "Logfile: $execLogFile\n" > $execLogfile
-      
+
       #cd *
       echo "[`date +"%Y-%m-%d %H:%M"`] [mkdir] :" >> $execLogfile
       if [[ "`echo "$execPath" | cut -b 1`" = "*" ]] ; then
@@ -589,7 +589,7 @@ function execution {
       mkdir -pv "${date}_${execStartTime}" >> $execLogfile
       cd "${date}_${execStartTime}" >> $execLogfile
 
-      
+
       echo "[`date +"%Y-%m-%d %H:%M"`] [Backup] : START" >> $execLogfile
       if [[ "$flagBash" = "bash" ]] ; then
         echo "[`date +"%Y-%m-%d %H:%M"`] [bash] : " >> $execLogfile
@@ -608,7 +608,7 @@ function execution {
         execEndTime=`date +"%H-%M"`
         echo -n "[`date +"%Y-%m-%d %H:%M"`] [mv] : " >> $execLogfile
         mv -v ${date}__start_${execStartTime}__name_${execName}.img.gz.part ${date}__start_${execStartTime}__end_${execEndTime}__name_${execName}.img.gz >> $execLogfile
-        
+
       elif [[ "$flagCopy" = "copy" ]] ; then
         echo "[`date +"%Y-%m-%d %H:%M"`] [cp] : " >> $execLogfile
         cp -r "$execSource" . >> $execLogfile
@@ -648,7 +648,7 @@ function execution {
         echo "[`date +"%Y-%m-%d %H:%M"`] [gzip] : END" >> $execLogfile
       elif [[ "$flagZip" = "" ]] && [[ "$flagTar" = "tar" ]] ; then
         echo "[`date +"%Y-%m-%d %H:%M"`] [tar] :" >> $execLogfile
-        ( 
+        (
           cd $execSource
           execSourceEmpty=$(echo *) # "*" then its empty
           echo "execSourceEmpty : $execSourceEmpty"
@@ -658,7 +658,7 @@ function execution {
             execEndTime=`date +"%H-%M"`
             echo -n "[`date +"%Y-%m-%d %H:%M"`] [mv] : "
             mv -v "$execPath/${date}_${execStartTime}/${date}__start_${execStartTime}__name_${execName}.tar.part" "$execPath/${date}_${execStartTime}/${date}__start_${execStartTime}__name_${execName}.tar" >> $execLogfile
-         
+
           else
             echo "[`date +"%Y-%m-%d %H:%M"`] [tar] : Directory empty, no data to save!" >> $execLogfile
             echo "[`date +"%Y-%m-%d %H:%M"`] [tar] : END"
@@ -669,7 +669,7 @@ function execution {
       fi
 
       echo -e "[`date +"%Y-%m-%d %H:%M"`] [Backup] : END \n" >> $execLogfile
-      
+
       ##  rotating delete  ##
 
       echo -e "[`date +"%Y-%m-%d %H:%M"`] [Backup] : check for old backups" >> $execLogfile
@@ -699,8 +699,8 @@ function execution {
           fi
         fi
       done
-      
-      
+
+
       ##  LOG or NOT  ##
 
       if [[ "$flagLog" = "log" ]] ; then
@@ -754,7 +754,7 @@ while : ; do
 
     prog)   programmBackup "$2" "$3" "$4" "$5" "$6"
             break
-            ;;    
+            ;;
     exec)   execution >> /dev/null
             break
             ;;
@@ -770,7 +770,7 @@ while : ; do
               echo -e "\n\033[31mError : \033[33mTo many arguments for path.\n"
               break
             fi
-            
+
             if test -e $2 && test -d $2 ; then
               echo -e "\n\033[36mMSG   : \033[32mChanging \033[37mstandart backup path to \033[33m$2"
               echo $2 > $backupPath
@@ -788,7 +788,7 @@ while : ; do
             fi
 
             if [[ "$2" =~ ^[0-9][0-9]$ ]] || [[ "$2" =~ ^[0-9]$ ]] ; then
-              
+
               ID=1
               while read line; do
                 if [[ $ID -eq $2 ]] ; then
@@ -814,14 +814,14 @@ while : ; do
 
               cat $backupList
               cat $deactBackupList
-              
+
             else
               echo -e "\n\033[31mError : \033[33m'$2' is not an argument for deact\n"
               break
             fi
             break
-            ;; 
-         
+            ;;
+
     react)  if [[ "$3" != "" ]] ; then
               echo -e "\n\033[31mError : \033[33mTo many arguments for react.\n"
               break
@@ -836,7 +836,7 @@ while : ; do
                 fi
                 ID=$(($ID+1))
               done < $deactBackupFile
-              
+
               if [[ "$deletedLine" = "" ]] ; then
                 echo -e "\n\033[31mError : \033[33mBackup ID $2 does not exsist in deactivation list\n"
                 break
@@ -863,9 +863,9 @@ while : ; do
             else
               echo -e "\n\033[31mError : \033[33m'$2' is not an argument for react\n"
             fi
-            break  
+            break
             ;;
-         
+
 
     rm)     if [[ "$3" != "" ]] ; then
               echo -e "\n\033[31mError : \033[33mTo many arguments for rm.\n"
@@ -877,8 +877,8 @@ while : ; do
               read option
               case $option in
                 yes|y|Yes|Y)  echo -e "\n\033[36mMSG   : \033[33mDeleting trashbin..."
-                              rm -f $trashBackupList 
-                              rm -f $trashBackupFile 
+                              rm -f $trashBackupList
+                              rm -f $trashBackupFile
                               echo -e "\033[36mMSG   : \033[33mTrashbin deleted!\n"
                               ;;
                 *)    echo -e "\n\033[36mMSG   : \033[32mTrashbin not deleted!\n"
@@ -891,7 +891,7 @@ while : ; do
               case $option in
                 yes|y|Yes|Y)  echo -e "\n\033[36mMSG   : \033[33mDeleting deactivation list..."
                               rm -f $deactBackupFile
-                              rm -f $deactBackupList 
+                              rm -f $deactBackupList
                               echo -e "\033[36mMSG   : \033[33mDeactivation list deleted!\n"
                               ;;
                 *)    echo -e "\n\033[36mMSG   : \033[32mDeactivation list not deleted!\n"
@@ -901,7 +901,7 @@ while : ; do
             fi
 
             if [[ "$2" =~ ^[0-9][0-9]$ ]] || [[ "$2" =~ ^[0-9]$ ]] ; then
-              
+
               ID=1
               while read line; do
                 if [[ $ID -eq $2 ]] ; then
@@ -944,7 +944,7 @@ while : ; do
             #  echo -e "\n\033[31mError : \033[33mBackup ID $2 does not exsist in trashbin!\n"
             #  break
             #fi
-            
+
             if [[ "$2" =~ ^[0-9][0-9]$ ]] || [[ "$2" =~ ^[0-9]$ ]] ; then
 
               ID=1
@@ -955,7 +955,7 @@ while : ; do
                 fi
                 ID=$(($ID+1))
               done < $trashBackupFile
-              
+
               if [[ "$deletedLine" = "" ]] ; then
                 echo -e "\n\033[31mError : \033[33mBackup ID $2 does not exsist in trashbin\n"
                 break
@@ -1051,7 +1051,7 @@ while : ; do
             break
             ;;
 
-    -h|--help|help)     
+    -h|--help|help)
             if [[ "$2" != "" ]] ; then
               echo -e "\n\033[31mError : \033[33mTo many arguments for --help.\n"
               break
@@ -1079,7 +1079,7 @@ while : ; do
               echo -e -n "\n\033[35mQ & A?: \033[33mDo you really want to \033[31mdelete \033[33mthe program files and restore from the file? \033[37m[\033[32my\033[37m/\033[31mN\033[37m] : " ; 
               read option
               case $option in
-                yes|y|Yes|Y)  
+                yes|y|Yes|Y)
                               if test -f $2 ; then
                                 echo -e "\n\033[36mMSG   : \033[33mDeleting program files..."
                                 rm -rf /usr/local/etc/backup
@@ -1098,10 +1098,10 @@ while : ; do
               esac
             else
               echo -e "\n\033[31mError : \033[33m'$3' is not an argument for --restoreProgram\n"
-            fi            
+            fi
             break
             ;;
-            
+
     --deleteAllProgramFiles)
             if [[ "$3" != "" ]] ; then
               echo -e "\n\033[31mError : \033[33mTo many arguments for --deleteAllProgramFiles.\n"
