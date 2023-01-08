@@ -122,10 +122,7 @@ function readFlag {
                     else
                       breakval=1
                     fi
-                    if [[ `echo $1 | cut -b 2` -eq 0 ]] ; then
-                      flagcheck=1
-                      flagCheckWeek=0
-                    elif [[ `echo $1 | cut -b 2` -gt 7 ]] ; then
+                    if [[ `echo $1 | cut -b 2` -gt 6 ]] ; then
                       flagcheck=1
                       flagCheckWeek=0
                     fi
