@@ -116,7 +116,7 @@ function readFlag {
                     fi
                     ;;
 
-    w[0-9])         flagCheckWeek=1
+    w[0-6])         flagCheckWeek=1
                     if [[ `date +"%w"` -eq `echo $1 | cut -b 2` ]] || [[ $execAllBackups -eq 1 ]] ; then
                       flagWeek="w"
                     else
@@ -269,7 +269,9 @@ function renderHelp {
                 
                 m[1-31] >>  monthly backup
                 
-                w[1-7]  >>  weekly backup
+                w[0-6]  >>  weekly backup
+                            0  1  2  3  4  5  6
+                            Su Mo Tu We Th Fr Sa
         
                 day     >>  daily backup
 
