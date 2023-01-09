@@ -1,6 +1,6 @@
 #!/bin/bash
 
-umask 0077
+umask 0177
 
 countLoad=1
 length=${COLUMNS:-$(tput cols)}
@@ -57,6 +57,7 @@ while : ; do
 done
 load 68
 cp `cat $path` /usr/local/bin/backup
+chmod 755 /usr/local/bin/backup
 load 85
 rm $path
 load 100
