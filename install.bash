@@ -60,4 +60,4 @@ cp `cat $path` /usr/local/bin/backup
 load 85
 rm $path
 load 100
-echo -e "\033[32m[Successfully installed"
+echo -e "\033[32m[\033[7mSuccessfully installed\033[0m"
