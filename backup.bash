@@ -22,7 +22,7 @@
 ######später entfernen
 #cp /srv/dev-disk-by-uuid-3c6b8ad9-35ca-4dcf-9039-0158b5532353/raid1/00__Backup/backup-programm/backup.sh /usr/local/bin/backup
 
-umask 0022
+umask 0077
 
 programmDir=/usr/local/etc/backup
 tempDir=$programmDir/temp

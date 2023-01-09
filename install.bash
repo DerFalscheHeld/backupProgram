@@ -1,5 +1,7 @@
 #!/bin/bash
 
+umask 0077
+
 countLoad=1
 length=${COLUMNS:-$(tput cols)}
 length=$(($length-1))
