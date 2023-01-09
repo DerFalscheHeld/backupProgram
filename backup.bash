@@ -102,27 +102,27 @@ flagImg=""
 function readFlag {
   case $1 in
     m[0-9][0-9])    flagCheckMonth=1
-                    if [[ `date +"%d"` -eq `echo $1 | cut -b 2-3` ]] || [[ $execAllBackups -eq 1 ]] ; then
+                    if [[ "`date +'%d'`" = "`echo $1 | cut -b 2-3`" ]] || [[ $execAllBackups -eq 1 ]] ; then
                       flagMonth="m"
                     else
                       breakval=1
                     fi
-                    if [[ `echo $1 | cut -b 2-3` -eq 00 ]] ; then
+                    if [[ "`echo $1 | cut -b 2-3`" = "00" ]] ; then
                       flagcheck=1
                       flagCheckMonth=0
-                    elif [[ `echo $1 | cut -b 2-3` -gt 31 ]] ; then
+                    elif [[ "`echo $1 | cut -b 2-3`" -gt "31" ]] ; then
                       flagcheck=1
                       flagCheckMonth=0
                     fi
                     ;;
 
     w[0-6])         flagCheckWeek=1
-                    if [[ `date +"%w"` -eq `echo $1 | cut -b 2` ]] || [[ $execAllBackups -eq 1 ]] ; then
+                    if [[ "`date +'%w'`" = "`echo $1 | cut -b 2`" ]] || [[ $execAllBackups -eq 1 ]] ; then
                       flagWeek="w"
                     else
                       breakval=1
                     fi
-                    if [[ `echo $1 | cut -b 2` -gt 6 ]] ; then
+                    if [[ "`echo $1 | cut -b 2`" -gt "6" ]] ; then
                       flagcheck=1
                       flagCheckWeek=0
                     fi
