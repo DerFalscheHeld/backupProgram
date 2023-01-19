@@ -35,9 +35,9 @@ fi
 
 mkdir -p '/usr/local/bin'
 load 17
-mkdir -p '/usr/local/etc/backup/temp'
+mkdir -p '/usr/local/etc/usb_backup/temp'
 load 34
-path='/usr/local/etc/backup/temp/gitClonePath.temp'
+path='/usr/local/etc/usb_backup/temp/gitClonePath.temp'
 touch $path
 load 51
 count=1
@@ -60,5 +60,6 @@ cp `cat $path` /usr/local/bin/usbbackup
 chmod 755 /usr/local/bin/usbbackup
 load 85
 rm $path
+rmdir '/usr/local/etc/usb_backup/temp'
 load 100
 echo -e "\033[32m[\033[7mSuccessfully installed\033[0m"
