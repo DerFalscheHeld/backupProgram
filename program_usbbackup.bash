@@ -53,6 +53,9 @@ function execution {
     execUUID=`echo $line | cut -d'#' -f 3`
     execExclude=`echo $line | cut -d'#' -f 4`
     timeout=`echo $line | cut -d'#' -f 1`
+    if [[ "$timeout" = "$time" ]] ; then
+      sed -i -e ${count}c"0#$execDir#$execUUID#$execExclude" $usbBackupFile
+    fi
     if [[ `lsblk /dev/disk/by-uuid/$execUUID 2> /dev/null` ]] && [[ "$timeout" = "0" ]] ; then
       sed -i -e ${count}c"$time#$execDir#$execUUID#$execExclude" $usbBackupFile
       umask 0000
@@ -70,9 +73,6 @@ function execution {
       rmdir -p $mntPath 2> /dev/null
       umask 0177
     fi
-    if [[ "$timeout" = "$time" ]] ; then
-      sed -i -e ${count}c"0#$execDir#$execUUID#$execExclude" $usbBackupFile
-    fi
     count=$(($count+1))
   done < $usbBackupFile
 }
@@ -85,6 +85,7 @@ fi
 case $1 in
   exec) execution
         ;;
+
   prog) echo -e -n "\033[33m"
         if [[ -d "$2" ]] && [[ `lsblk /dev/disk/by-uuid/$3` ]] ; then
           echo "0#$2#$3#$4" >> $usbBackupFile
@@ -111,6 +112,7 @@ case $1 in
           echo -e "\033[31mERROR :\033[33m '$2 is no argumet for rm'\033[0m"
         fi
         ;;
+
     -h|--help|help)
         help
         ;;
