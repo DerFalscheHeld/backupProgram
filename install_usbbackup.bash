@@ -47,7 +47,7 @@ while : ; do
     echo -n $pathPart >> $path
   else
     if [[ "`echo $0 | cut -d'/' -f $(($count+1))`" = "" ]] ; then
-      echo -n /backup.bash >> $path
+      echo -n /program_usbbackup.bash >> $path
       break
     else
       echo -n /$pathPart >> $path
@@ -56,8 +56,8 @@ while : ; do
   count=$(($count+1))
 done
 load 68
-cp `cat $path` /usr/local/bin/backup
-chmod 755 /usr/local/bin/backup
+cp `cat $path` /usr/local/bin/usbbackup
+chmod 755 /usr/local/bin/usbbackup
 load 85
 rm $path
 load 100
