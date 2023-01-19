@@ -42,7 +42,7 @@ function help {
 
     prog [DIR] [UUID] [EXCLUDE] >> prog uses this command
 
-         rsync \033[35m-a --info\033[32m=\033[37mprogress2 \033[35m--delete --inplace --whole-file --exclude \033[37m\"\033[32m[\033[36mEXCLUDE\033[32m]\033[37m\" \033[32m[\033[36mDIR\033[32m] \033[37m $mntPath
+         rsync \033[35m-a --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file --exclude \033[37m\"\033[32m[\033[36mEXCLUDE\033[32m]\033[37m\" \033[32m[\033[36mDIR\033[32m] \033[37m $mntPath
 
   \033[0m"
 }
@@ -53,21 +53,25 @@ function execution {
     execUUID=`echo $line | cut -d'#' -f 3`
     execExclude=`echo $line | cut -d'#' -f 4`
     timeout=`echo $line | cut -d'#' -f 1`
-    if [[ `lsblk $execUUID` ]] && [[ "$timeout" = "0" ]] ; then
+    if [[ `lsblk /dev/disk/by-uuid/$execUUID 2> /dev/null` ]] && [[ "$timeout" = "0" ]] ; then
+      sed -i -e ${count}c"$time#$execDir#$execUUID#$execExclude" $usbBackupFile
+      umask 0000
       backupTime=`date +"%Y-%m-%d--%H-%M"`
       mntPath=$usbBackupPath/mount/$backupTime
       mkdir -p $mntPath
-      mount $execUUID $mntPath
+      mount /dev/disk/by-uuid/$execUUID $mntPath
       if [[ `$execExclude` = "" ]] ; then
-        rsync -a --info=progress2 --delete --inplace --whole-file $execDir $mntPath
+        rsync -a --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file $execDir $mntPath
       else
-        rsync -a --info=progress2 --delete --inplace --whole-file --exclude "$execExclude" $execDir $mntPath
+        rsync -a --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file --exclude "$execExclude" $execDir $mntPath
       fi
-      rmdir -p $mntPath
-      sed -i -e ${count}c"$time#$execDir#$execUUID#$execExclude" $usbBackupFile
-      if [[ "$timeout" = "$time" ]] ; then
-        sed -i -e ${count}c"0#$execDir#$execUUID#$execExclude" $usbBackupFile
-      fi
+      echo -e "\n/-/-/  USB-Backup complete!  /-/-/\n"
+      umount $mntPath
+      rmdir -p $mntPath 2> /dev/null
+      umask 0177
+    fi
+    if [[ "$timeout" = "$time" ]] ; then
+      sed -i -e ${count}c"0#$execDir#$execUUID#$execExclude" $usbBackupFile
     fi
     count=$(($count+1))
   done < $usbBackupFile
@@ -79,12 +83,12 @@ if [[ "$1" = "" ]] ; then
 fi
 
 case $1 in
-  exec) execution >> /dev/null
+  exec) execution
         ;;
   prog) echo -e -n "\033[33m"
         if [[ -d "$2" ]] && [[ `lsblk /dev/disk/by-uuid/$3` ]] ; then
           echo "0#$2#$3#$4" >> $usbBackupFile
-          echo -e "\033[36mERROR :\033[32m Saved!\033[0m"
+          echo -e "\033[36mMSG   :\033[32m Saved!\033[0m"
         else
           echo -e "\033[31mERROR :\033[33m Error DIR or UUID does not exsist!\033[0m"
         fi
