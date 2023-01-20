@@ -63,10 +63,19 @@ function execution {
       mntPath=$usbBackupPath/mount/$backupTime
       mkdir -p $mntPath
       mount /dev/disk/by-uuid/$execUUID $mntPath
+      count2=2
+      while : ; do
+        if [[ `echo $execDir | cut -d"/" -f $count2` = "" ]] ; then
+          rsyncDir=`echo $execDir | cut -d"/" -f $(($count2-1))`
+          break
+        fi
+        count2=$(($count2+1))
+      done
+      rsyncPath=$mntPath/$rsyncDir
       if [[ `$execExclude` = "" ]] ; then
-        rsync -a --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file $execDir $mntPath
+        rsync -a --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file $execDir $rsyncPath
       else
-        rsync -a --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file --exclude "$execExclude" $execDir $mntPath
+        rsync -a --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file --exclude "$execExclude" $execDir $rsyncPath
       fi
       echo -e "\n/-/-/  USB-Backup complete!  /-/-/\n"
       umount $mntPath
