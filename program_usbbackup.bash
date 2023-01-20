@@ -42,8 +42,14 @@ function help {
 
     prog [DIR] [UUID] [EXCLUDE] >> prog uses this command
 
-         rsync \033[35m-a --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file --exclude=\033{37m\"\033[32m[\033[36m'EXCLUDE1','EXCLUDE2'\033[32m}\033[37m\" \033[32m[\033[36mDIR\033[32m] \033[37m $mntPath
+    EXAMPLE >> usbbackup prog /data1
+    EXECUTES rsync \033[35m-a --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file \033[36m/data1 \033[37m $mntPath
 
+    EXAMPLE >> usbbackup prog /data1 \"'/data2','data3','test.txt'\"
+    EXECUTES rsync \033[35m-a --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file --exclude=\033[32m{\033[36m'data2','data3','test.txt'\033[32m}\033[37m \033[36m/data1 \033[37m $mntPath
+
+    EXAMPLE >> usbbackup prog /data1 \"'/data2'\"
+    EXECUTES rsync \033[35m-a --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file --exclude=\033[32m{\033[36m'data2'\033[32m}\033[37m \033[36m/data1 \033[37m $mntPath
   \033[0m"
 }
 
@@ -72,7 +78,7 @@ function execution {
         count2=$(($count2+1))
       done
       rsyncPath=$mntPath/$rsyncDir
-      if [[ "`$execExclude`" = "" ]] ; then
+      if [[ "$execExclude" = "" ]] ; then
         rsync -a --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file $execDir $rsyncPath
       else
         rsync -a --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file --exclude={$execExclude} $execDir $rsyncPath
