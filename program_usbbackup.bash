@@ -42,7 +42,7 @@ function help {
 
     prog [DIR] [UUID] [EXCLUDE] >> prog uses this command
 
-         rsync \033[35m-a --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file --exclude \033[37m\"\033[32m[\033[36mEXCLUDE\033[32m]\033[37m\" \033[32m[\033[36mDIR\033[32m] \033[37m $mntPath
+         rsync \033[35m-a --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file --exclude=\033{37m\"\033[32m[\033[36m'EXCLUDE1','EXCLUDE2'\033[32m}\033[37m\" \033[32m[\033[36mDIR\033[32m] \033[37m $mntPath
 
   \033[0m"
 }
@@ -65,17 +65,17 @@ function execution {
       mount /dev/disk/by-uuid/$execUUID $mntPath
       count2=2
       while : ; do
-        if [[ `echo $execDir | cut -d"/" -f $count2` = "" ]] ; then
+        if [[ "`echo $execDir | cut -d"/" -f $count2`" = "" ]] || [[ $count2 -eq 100 ]] ; then
           rsyncDir=`echo $execDir | cut -d"/" -f $(($count2-1))`
           break
         fi
         count2=$(($count2+1))
       done
       rsyncPath=$mntPath/$rsyncDir
-      if [[ `$execExclude` = "" ]] ; then
+      if [[ "`$execExclude`" = "" ]] ; then
         rsync -a --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file $execDir $rsyncPath
       else
-        rsync -a --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file --exclude "$execExclude" $execDir $rsyncPath
+        rsync -a --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file --exclude={$execExclude} $execDir $rsyncPath
       fi
       echo -e "\n/-/-/  USB-Backup complete!  /-/-/\n"
       umount $mntPath
