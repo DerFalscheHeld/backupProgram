@@ -62,7 +62,7 @@ function execution {
     if [[ "$timeout" = "$time" ]] ; then
       sed -i -e ${count}c"0#$execDir#$execUUID#$execExclude" $usbBackupFile
     fi
-    if [[ `lsblk /dev/disk/by-uuid/$execUUID 2> /dev/null` ]] && [[ "$timeout" = "0" ]] ; then
+    if lsblk /dev/disk/by-uuid/$execUUID 2>&1 > /dev/null && [[ "$timeout" = "0" ]] ; then
       sed -i -e ${count}c"currently_executing#$execDir#$execUUID#$execExclude" $usbBackupFile
       umask 0000
       backupTime=`date +"%Y-%m-%d--%H-%M"`
@@ -70,7 +70,7 @@ function execution {
       execCount=$(($execCount+1))
       mkdir -p $mntPath
       echo -e "mount /dev/disk/by-uuid/$execUUID $mntPath\n"
-      if [[ `mount -v /dev/disk/by-uuid/$execUUID $mntPath` ]] ; then
+      if mount -v /dev/disk/by-uuid/$execUUID $mntPath ; then
         count2=2
         while : ; do
           if [[ "`echo $execDir | cut -d"/" -f $count2`" = "" ]] || [[ $count2 -eq 100 ]] ; then
