@@ -19,6 +19,7 @@ usbBackupPath=/usr/local/etc/usb_backup
 usbBackupFile=$usbBackupPath/usb_backup.conf
 usbBackup_ls=$usbBackupPath/usb_backup.ls
 count=1
+execCount=1
 
 mkdir -p $usbBackupPath
 touch $usbBackupFile
@@ -65,8 +66,10 @@ function execution {
       sed -i -e ${count}c"currently_executing#$execDir#$execUUID#$execExclude" $usbBackupFile
       umask 0000
       backupTime=`date +"%Y-%m-%d--%H-%M"`
-      mntPath=$usbBackupPath/mount/$backupTime-$count
+      mntPath=$usbBackupPath/mount/$backupTime-exec$execCount
+      execCount=$(($execCount+1))
       mkdir -p $mntPath
+      echo -e "mount /dev/disk/by-uuid/$execUUID $mntPath\n"
       if [[ `mount -v /dev/disk/by-uuid/$execUUID $mntPath` ]] ; then
         count2=2
         while : ; do
@@ -78,17 +81,21 @@ function execution {
         done
         rsyncPath=$mntPath/$rsyncDir
         if [[ "$execExclude" = "" ]] ; then
+          echo "rsync --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file $execDir $rsyncPath"
           rsync --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file $execDir $rsyncPath
         else
+          echo "rsync --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file --exclude={$execExclude} $execDir $rsyncPath"
           rsync --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file --exclude={$execExclude} $execDir $rsyncPath
         fi
+        echo "umount $mntPath"
         umount $mntPath
+        sed -i -e ${count}c"$time#$execDir#$execUUID#$execExclude" $usbBackupFile
       else
-        echo mount failed
+        echo "mount failed"
+        sed -i -e ${count}c"0#$execDir#$execUUID#$execExclude" $usbBackupFile
       fi
       rmdir -p $mntPath 2> /dev/null
       echo -e "\n/-/-/  USB-Backup complete!  /-/-/\n"
-      sed -i -e ${count}c"$time#$execDir#$execUUID#$execExclude" $usbBackupFile
     fi
     count=$(($count+1))
   done < $usbBackupFile
