@@ -15,8 +15,6 @@ fi
 
 umask 0177
 
-time=`date +"%H%M"`
-
 usbBackupPath=/usr/local/etc/usb_backup
 usbBackupFile=$usbBackupPath/usb_backup.conf
 usbBackup_ls=$usbBackupPath/usb_backup.ls
@@ -43,18 +41,19 @@ function help {
     prog [DIR] [UUID] [EXCLUDE] >> prog uses this command
 
     EXAMPLE >> usbbackup prog /data1
-    EXECUTES rsync \033[35m-a --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file \033[36m/data1 \033[37m $mntPath
+    EXECUTES rsync\033[35m --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file \033[36m/data1 \033[37m $mntPath
 
     EXAMPLE >> usbbackup prog /data1 \"'/data2','data3','test.txt'\"
-    EXECUTES rsync \033[35m-a --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file --exclude=\033[32m{\033[36m'data2','data3','test.txt'\033[32m}\033[37m \033[36m/data1 \033[37m $mntPath
+    EXECUTES rsync\033[35m --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file --exclude=\033[32m{\033[36m'data2','data3','test.txt'\033[32m}\033[37m \033[36m/data1 \033[37m $mntPath
 
     EXAMPLE >> usbbackup prog /data1 \"'/data2'\"
-    EXECUTES rsync \033[35m-a --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file --exclude=\033[32m{\033[36m'data2'\033[32m}\033[37m \033[36m/data1 \033[37m $mntPath
+    EXECUTES rsync\033[35m --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file --exclude=\033[32m{\033[36m'data2'\033[32m}\033[37m \033[36m/data1 \033[37m $mntPath
   \033[0m"
 }
 
 function execution {
   while read line ; do
+    time=`date +"%H%M"`
     execDir=`echo $line | cut -d'#' -f 2`
     execUUID=`echo $line | cut -d'#' -f 3`
     execExclude=`echo $line | cut -d'#' -f 4`
@@ -63,7 +62,7 @@ function execution {
       sed -i -e ${count}c"0#$execDir#$execUUID#$execExclude" $usbBackupFile
     fi
     if [[ `lsblk /dev/disk/by-uuid/$execUUID 2> /dev/null` ]] && [[ "$timeout" = "0" ]] ; then
-      sed -i -e ${count}c"$time#$execDir#$execUUID#$execExclude" $usbBackupFile
+      sed -i -e ${count}c"currently_executing#$execDir#$execUUID#$execExclude" $usbBackupFile
       umask 0000
       backupTime=`date +"%Y-%m-%d--%H-%M"`
       mntPath=$usbBackupPath/mount/$backupTime
@@ -79,14 +78,14 @@ function execution {
       done
       rsyncPath=$mntPath/$rsyncDir
       if [[ "$execExclude" = "" ]] ; then
-        rsync -a --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file $execDir $rsyncPath
+        rsync --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file $execDir $rsyncPath
       else
-        rsync -a --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file --exclude={$execExclude} $execDir $rsyncPath
+        rsync --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file --exclude={$execExclude} $execDir $rsyncPath
       fi
-      echo -e "\n/-/-/  USB-Backup complete!  /-/-/\n"
       umount $mntPath
       rmdir -p $mntPath 2> /dev/null
-      umask 0177
+      echo -e "\n/-/-/  USB-Backup complete!  /-/-/\n"
+      sed -i -e ${count}c"$time#$execDir#$execUUID#$execExclude" $usbBackupFile
     fi
     count=$(($count+1))
   done < $usbBackupFile
