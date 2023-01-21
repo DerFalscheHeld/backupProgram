@@ -65,24 +65,27 @@ function execution {
       sed -i -e ${count}c"currently_executing#$execDir#$execUUID#$execExclude" $usbBackupFile
       umask 0000
       backupTime=`date +"%Y-%m-%d--%H-%M"`
-      mntPath=$usbBackupPath/mount/$backupTime
+      mntPath=$usbBackupPath/mount/$backupTime-$count
       mkdir -p $mntPath
-      mount /dev/disk/by-uuid/$execUUID $mntPath
-      count2=2
-      while : ; do
-        if [[ "`echo $execDir | cut -d"/" -f $count2`" = "" ]] || [[ $count2 -eq 100 ]] ; then
-          rsyncDir=`echo $execDir | cut -d"/" -f $(($count2-1))`
-          break
+      if [[ `mount -v /dev/disk/by-uuid/$execUUID $mntPath` ]] ; then
+        count2=2
+        while : ; do
+          if [[ "`echo $execDir | cut -d"/" -f $count2`" = "" ]] || [[ $count2 -eq 100 ]] ; then
+            rsyncDir=`echo $execDir | cut -d"/" -f $(($count2-1))`
+            break
+          fi
+          count2=$(($count2+1))
+        done
+        rsyncPath=$mntPath/$rsyncDir
+        if [[ "$execExclude" = "" ]] ; then
+          rsync --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file $execDir $rsyncPath
+        else
+          rsync --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file --exclude={$execExclude} $execDir $rsyncPath
         fi
-        count2=$(($count2+1))
-      done
-      rsyncPath=$mntPath/$rsyncDir
-      if [[ "$execExclude" = "" ]] ; then
-        rsync --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file $execDir $rsyncPath
+        umount $mntPath
       else
-        rsync --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file --exclude={$execExclude} $execDir $rsyncPath
+        echo mount failed
       fi
-      umount $mntPath
       rmdir -p $mntPath 2> /dev/null
       echo -e "\n/-/-/  USB-Backup complete!  /-/-/\n"
       sed -i -e ${count}c"$time#$execDir#$execUUID#$execExclude" $usbBackupFile
