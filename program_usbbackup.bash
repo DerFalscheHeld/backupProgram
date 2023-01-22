@@ -66,6 +66,7 @@ function execution {
       umask 0000
       backupTime=`date +"%Y-%m-%d--%H-%M"`
       mntPath=$usbBackupPath/mount/$backupTime
+      mntPathrm=$usbBackupPath/mount/*
       mkdir -p $mntPath
       echo -e "mount /dev/disk/by-uuid/$execUUID $mntPath\n"
       if mount -v /dev/disk/by-uuid/$execUUID $mntPath ; then
@@ -78,6 +79,7 @@ function execution {
           count2=$(($count2+1))
         done
         rsyncPath=$mntPath/$HOSTNAME/$rsyncDir
+        touch $mntPath/$HOSTNAME/backuptime_$rsyncDir.txt
         echo "[`date +"%Y-%m-%d %H:%M"`] [START USB-Backup]" > $mntPath/$HOSTNAME/backuptime_$rsyncDir.txt
         mkdir -p $rsyncPath
         if [[ "$execExclude" = "" ]] ; then
@@ -88,14 +90,14 @@ function execution {
           rsync --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file --exclude={$execExclude} $execDir $rsyncPath
         fi
         echo "umount $mntPath"
+        echo "[`date +"%Y-%m-%d %H:%M"`] [END USB-Backup]" >> $mntPath/$HOSTNAME/backuptime_$rsyncDir.txt
         umount $mntPath
         sed -i -e ${count}c"$time#$execDir#$execUUID#$execExclude" $usbBackupFile
-        echo "[`date +"%Y-%m-%d %H:%M"`] [END USB-Backup]" > $mntPath/$HOSTNAME/backuptime_$rsyncDir.txt
       else
         echo "mount failed!"
         sed -i -e ${count}c"0#$execDir#$execUUID#$execExclude" $usbBackupFile
       fi
-      rmdir -p $mntPath 2> /dev/null
+      rmdir -p $mntPathrm 2> /dev/null
       echo -e "\n/-/-/  USB-Backup complete!  /-/-/\n"
     fi
     count=$(($count+1))
