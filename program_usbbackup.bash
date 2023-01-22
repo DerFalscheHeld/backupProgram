@@ -62,7 +62,7 @@ function execution {
     if [[ "$timeout" = "$time" ]] ; then
       sed -i -e ${count}c"0#$execDir#$execUUID#$execExclude" $usbBackupFile
     fi
-    if lsblk /dev/disk/by-uuid/$execUUID 2>&1 > /dev/null && [[ "$timeout" = "0" ]] ; then
+    if lsblk /dev/disk/by-uuid/$execUUID 2> /dev/null && [[ "$timeout" = "0" ]] ; then
       sed -i -e ${count}c"currently_executing#$execDir#$execUUID#$execExclude" $usbBackupFile
       umask 0000
       backupTime=`date +"%Y-%m-%d--%H-%M"`
