@@ -79,9 +79,9 @@ function execution {
           count2=$(($count2+1))
         done
         rsyncPath=$mntPath/$HOSTNAME/$rsyncDir
+        mkdir -p $rsyncPath
         touch $mntPath/$HOSTNAME/backuptime_$rsyncDir.txt
         echo "[`date +"%Y-%m-%d %H:%M"`] [START USB-Backup]" > $mntPath/$HOSTNAME/backuptime_$rsyncDir.txt
-        mkdir -p $rsyncPath
         if [[ "$execExclude" = "" ]] ; then
           echo "rsync --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file $execDir $rsyncPath"
           rsync --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file $execDir $rsyncPath
