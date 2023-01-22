@@ -53,3 +53,5 @@ fi
 sudo chmod 600 /etc/msmtprc
 sudo chmod 600 ~/.msmtprc
 sudo chmod 777 /usr/sbin/sendmail
+
+echo -e "\033[36mMSG  :\033[33m Please reboot your system to activate the mailservice!\033[0m"
