@@ -32,21 +32,22 @@ while : ; do
   count=$(($count+1))
 done
 
-#cat msmtprc.conf > $home/.msmtprc
+configDir=config_cronmail_service
+cp -f $path$configDir/msmtprc.conf $home/.msmtprc
 
-#chmod 600 $home/.msmtprc
-#sudo cp $home/.msmtprc /etc/msmtprc
-#sudo cp $home/.msmtprc ~/.msmtprc
-#sudo chmod 600 /etc/msmtprc
-#sudo chmod 600 ~/.msmtprc
+chmod 600 $home/.msmtprc
+sudo cp -f $home/.msmtprc /etc/msmtprc
+sudo cp -f $home/.msmtprc ~/.msmtprc
+sudo chmod 600 /etc/msmtprc
+sudo chmod 600 ~/.msmtprc
+sudo cp -f $path$configDir/aliases.conf /etc/aliases
 
-bash -c'
-cat /aliases.conf > /etc/aliases ;
 if [[ "$1" = "DEBUG" ]] ; then
-  echo "set sendmail=\"/usr/bin/msmtp -t -d\"" > /etc/mail.rc ;
+  sudo cp -f $path$configDir/mail.rc.debug /etc/mail.rc
 else
-  echo "set sendmail=\"/usr/bin/msmtp -t\"" > /etc/mail.rc ;
-fi ;
-rm /usr/sbin/sendmail ;
-echo -e "#!/bin/bash\nsed -e 1c\"FROM: \(Cron Daemon\) \<${mail}\>\" | /usr/bin/msmtp -t -d" >> /usr/sbin/sendmail ;
-sudo chmod 777 /usr/sbin/sendmail' ;
+  sudo cp -f $path$configDir/mail.rc /etc/mail.rc
+fi
+
+sudo rm /usr/sbin/sendmail
+sudo cp $path$configDir/sendmail.conf /usr/sbin/sendmail
+sudo chmod 777 /usr/sbin/sendmail
