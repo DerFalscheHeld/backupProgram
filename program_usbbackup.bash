@@ -79,6 +79,7 @@ function execution {
         done
         rsyncPath=$mntPath/$HOSTNAME/$rsyncDir
         echo "[`date +"%Y-%m-%d %H:%M"`] [START USB-Backup]" > $mntPath/$HOSTNAME/backuptime_$rsyncDir.txt
+        mkdir -p $rsyncPath
         if [[ "$execExclude" = "" ]] ; then
           echo "rsync --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file $execDir $rsyncPath"
           rsync --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file $execDir $rsyncPath
