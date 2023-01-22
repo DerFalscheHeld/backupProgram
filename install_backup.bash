@@ -32,33 +32,25 @@ if [[ $UID != 0 ]] ; then
   echo -e "\n\033[31mError : \033[33mYou are not root!\n"
   exit
 fi
-
-mkdir -p '/usr/local/bin'
-load 17
-mkdir -p '/usr/local/etc/backup/temp'
-load 34
-path='/usr/local/etc/backup/temp/gitClonePath.temp'
-touch $path
-load 51
+load 10
+path=""
 count=1
 while : ; do
   pathPart=`echo $0 | cut -d'/' -f $count`
   if [[ $count -eq 1 ]] ; then
-    echo -n $pathPart >> $path
+    path="${path}${pathPart}"
   else
     if [[ "`echo $0 | cut -d'/' -f $(($count+1))`" = "" ]] ; then
-      echo -n /program_backup.bash >> $path
+      path="${path}/program_backup.bash"
       break
     else
-      echo -n /$pathPart >> $path
+      path="${path}/${pathPart}"
     fi
   fi
   count=$(($count+1))
 done
-load 68
-cp `cat $path` /usr/local/bin/backup
+load 50
+cp $path /usr/local/bin/backup
 chmod 755 /usr/local/bin/backup
-load 85
-rm $path
 load 100
 echo -e "\033[32m[\033[7mSuccessfully installed\033[0m"
