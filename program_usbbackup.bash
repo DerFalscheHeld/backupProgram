@@ -9,8 +9,8 @@
 # rsync -a --info=progress2 --delete --inplace --whole-file --exclude */0_Papierkorb /data/ /mnt
 
 if [[ $UID != 0 ]] ; then
-  echo -e "\033[31mERROR :\033[33m You are not root!\033[0m"
-  exit
+  echo -e "\033[31mERROR :\033[33m You are not root!\033[0m" >&2
+  exit 1
 fi
 
 umask 0177
@@ -68,8 +68,15 @@ function execution {
       mntPath=$usbBackupPath/mount/$backupTime
       mntPathrm=$usbBackupPath/mount/*
       mkdir -p $mntPath
+
+      # mount drive
       echo -e "mount /dev/disk/by-uuid/$execUUID $mntPath\n"
-      if mount -v /dev/disk/by-uuid/$execUUID $mntPath ; then
+      if ! mount -v /dev/disk/by-uuid/$execUUID $mntPath ; then
+        echo "mount failed!" >&2
+        sed -i -e ${count}c"0#$execDir#$execUUID#$execExclude" $usbBackupFile
+      else
+
+        # calculate $rsyncPath (path to copy to)
         count2=2
         while : ; do
           if [[ "`echo $execDir | cut -d"/" -f $count2`" = "" ]] || [[ $count2 -eq 100 ]] ; then
@@ -80,8 +87,12 @@ function execution {
         done
         rsyncPath=$mntPath/$HOSTNAME/$rsyncDir
         mkdir -p $rsyncPath
+
+        # write start time to drive
         touch $mntPath/$HOSTNAME/backuptime_$rsyncDir.txt
-        echo "[`date +"%Y-%m-%d %H:%M"`] [START USB-Backup]" > $mntPath/$HOSTNAME/backuptime_$rsyncDir.txt
+        echo "[`date +"%Y-%m-%d %H:%M"`] [START USB-Backup]" | tee -a $mntPath/$HOSTNAME/backuptime_$rsyncDir.txt
+
+        # run rsync
         if [[ "$execExclude" = "" ]] ; then
           echo "rsync --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file $execDir $rsyncPath"
           rsync --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file $execDir $rsyncPath
@@ -89,13 +100,16 @@ function execution {
           echo "rsync --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file --exclude={$execExclude} $execDir $rsyncPath"
           rsync --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file --exclude={$execExclude} $execDir $rsyncPath
         fi
+
+        # write end time to drive
+        echo "[`date +"%Y-%m-%d %H:%M"`] [END USB-Backup]" | tee -a $mntPath/$HOSTNAME/backuptime_$rsyncDir.txt
+
+        # unmount drive
         echo "umount $mntPath"
-        echo "[`date +"%Y-%m-%d %H:%M"`] [END USB-Backup]" >> $mntPath/$HOSTNAME/backuptime_$rsyncDir.txt
-        umount $mntPath
+        # try 5 times to unmount with 2s pause in between
+        for i in {1..5}; do umount $mntPath && break; echo "Failed to unmount drive, retry in 2s.."; done || echo "Failed 5 times. Skipping unount." >&2
+
         sed -i -e ${count}c"$time#$execDir#$execUUID#$execExclude" $usbBackupFile
-      else
-        echo "mount failed!"
-        sed -i -e ${count}c"0#$execDir#$execUUID#$execExclude" $usbBackupFile
       fi
       rmdir -p $mntPathrm 2> /dev/null
       echo -e "\n/-/-/  USB-Backup complete!  /-/-/\n"
@@ -118,7 +132,7 @@ case $1 in
           echo "0#$2#$3#$4" >> $usbBackupFile
           echo -e "\033[36mMSG   :\033[32m Saved!\033[0m"
         else
-          echo -e "\033[31mERROR :\033[33m Error DIR or UUID does not exsist!\033[0m"
+          echo -e "\033[31mERROR :\033[33m Error DIR or UUID does not exsist!\033[0m" >&2
         fi
         ;;
 
@@ -136,7 +150,7 @@ case $1 in
     rm) if [[ $2 = [0-9][0-9] ]] || [[ $2 = [0-9] ]] ; then
           sed -i "$2d" $usbBackupFile
         else
-          echo -e "\033[31mERROR :\033[33m '$2 is no argumet for rm'\033[0m"
+          echo -e "\033[31mERROR :\033[33m '$2 is no argumet for rm'\033[0m" >&2
         fi
         ;;
 
@@ -144,6 +158,6 @@ case $1 in
         help
         ;;
 
-     *) echo -e "\033[31mERROR :\033[33m Syntax Error!\033[0m"
+     *) echo -e "\033[31mERROR :\033[33m Syntax Error!\033[0m" >&2
         ;;
 esac
