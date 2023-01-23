@@ -3,7 +3,6 @@
 #usbbackup [DIR] [UUID] [EXCLUDE]
 
 #config
-
 #   timeout#ordner#uuid#exclude
 
 # rsync -a --info=progress2 --delete --inplace --whole-file --exclude */0_Papierkorb /data/ /mnt
@@ -95,10 +94,10 @@ function execution {
         # run rsync
         if [[ "$execExclude" = "" ]] ; then
           echo "rsync --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file $execDir $rsyncPath"
-          rsync --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file $execDir $rsyncPath
+          rsync --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file $execDir $rsyncPath | tee -a $mntPath/$HOSTNAME/backuptime_$rsyncDir.txt
         else
           echo "rsync --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file --exclude={$execExclude} $execDir $rsyncPath"
-          rsync --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file --exclude={$execExclude} $execDir $rsyncPath
+          rsync --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file --exclude={$execExclude} $execDir $rsyncPath | tee -a $mntPath/$HOSTNAME/backuptime_$rsyncDir.txt
         fi
 
         # write end time to drive
@@ -107,7 +106,11 @@ function execution {
         # unmount drive
         echo "umount $mntPath"
         # try 5 times to unmount with 2s pause in between
-        for i in {1..5}; do umount $mntPath && break; echo "Failed to unmount drive, retry in 2s.."; done || echo "Failed 5 times. Skipping unount." >&2
+        for i in {1..5} ; do
+          umount $mntPath && break
+          echo "Failed to unmount drive, retry in 2s.."
+          sleep 2
+        done || echo "Failed 5 times. Skipping unount." >&2
 
         sed -i -e ${count}c"$time#$execDir#$execUUID#$execExclude" $usbBackupFile
       fi
