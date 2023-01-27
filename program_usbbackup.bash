@@ -111,7 +111,7 @@ function execution {
           echo "Failed to unmount drive, retry in 2s.."
           sleep 2
         done || echo "Failed 5 times. Skipping unount." >&2
-
+        time=`date +"%H%M"`
         sed -i -e ${count}c"$time#$execDir#$execUUID#$execExclude" $usbBackupFile
       fi
       rmdir -p $mntPathrm 2> /dev/null
