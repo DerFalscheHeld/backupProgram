@@ -15,13 +15,13 @@ fi
 umask 0177
 
 usbBackupPath=/usr/local/etc/usb_backup
-usbBackupFile=$usbBackupPath/usb_backup.conf
-usbBackup_ls=$usbBackupPath/usb_backup.ls
+usbBackupFile=$usbBackupPath/usb_backup.json
 count=1
 
 mkdir -p $usbBackupPath
-touch $usbBackupFile
-touch $usbBackup_ls
+if ! [ -s $usbBackupFile ] ; then
+  jo -p usbBackup=$(jo -a $(jo ID= timeout= dir= uuid= exclude= )) > $usbBackupFile
+fi
 
 function help {
   backupTime=`date +"%Y-%m-%d--%H-%M"`
@@ -31,40 +31,63 @@ function help {
 
   options:
 
-    ls []       >> lists all usbBackups
+    ls []            >> lists all usbBackups
 
-    rm [1-99]   >> delete a usbBackup with that ID [1-99]
+    rm [1-99]        >> delete a usbBackup with that ID [1-99]
 
-    exec        >> for every minute execute use cron syntax | \033[36m* * * * * /usr/local/bin/usbbackup exec \033[37m
+    exec []          >> for every minute execute use cron syntax | \033[36m* * * * * /usr/local/bin/usbbackup exec \033[37m
+         [<command>] >> insert bash command in <command>, this command executes before disk will be mounted
 
     prog [DIR] [UUID] [EXCLUDE] >> prog uses this command
+
+    Structure 
+      /data1/data2
+      /data1/data3
+      /data1/test.txt
+      /data1/hello world.txt
 
     EXAMPLE >> usbbackup prog /data1
     EXECUTES rsync\033[35m --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file \033[36m/data1 \033[37m $mntPath
 
-    EXAMPLE >> usbbackup prog /data1 \"'/data2','data3','test.txt'\"
-    EXECUTES rsync\033[35m --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file --exclude=\033[32m{\033[36m'data2','data3','test.txt'\033[32m}\033[37m \033[36m/data1 \033[37m $mntPath
-
-    EXAMPLE >> usbbackup prog /data1 \"'/data2'\"
+    EXAMPLE >> usbbackup prog /data1 \"'data2'\"
     EXECUTES rsync\033[35m --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file --exclude=\033[32m{\033[36m'data2'\033[32m}\033[37m \033[36m/data1 \033[37m $mntPath
-  \033[0m"
+  
+    EXAMPLE >> usbbackup prog /data1 \"'data2','test.txt'\"
+    EXECUTES rsync\033[35m --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file --exclude=\033[32m{\033[36m'data2','test.txt'\033[32m}\033[37m \033[36m/data1 \033[37m $mntPath
+
+    EXAMPLE >> usbbackup prog /data1 \"'data2','data3','hello world.txt'\"
+    EXECUTES rsync\033[35m --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file --exclude=\033[32m{\033[36m'data2','data3','hello world.txt'\033[32m}\033[37m \033[36m/data1 \033[37m $mntPath
+\033[0m"
 }
 
 function execution {
-  while read line ; do
-    time=`date +"%H%M"`
-    execDir=`echo $line | cut -d'#' -f 2`
-    execUUID=`echo $line | cut -d'#' -f 3`
-    execExclude=`echo $line | cut -d'#' -f 4`
-    timeout=`echo $line | cut -d'#' -f 1`
+  time=`date +"%H:%M"`
+  for i in  $(seq 0 $(( $(jq -r .usbBackup[].ID $usbBackupFile | wc -l)-1))) ; do
+    ID=`jq -r .usbBackup[$i].ID $usbBackupFile`
+    execDir=`jq -r .usbBackup[$i].dir $usbBackupFile`
+    execUUID=`jq -r .usbBackup[$i].uuid $usbBackupFile`
+    execExclude=`jq -r .usbBackup[$i].exclude $usbBackupFile`
+    timeout=`jq -r .usbBackup[$i].timeout $usbBackupFile`
+    
     if [[ "$timeout" = "$time" ]] ; then
-      sed -i -e ${count}c"0#$execDir#$execUUID#$execExclude" $usbBackupFile
+      handover=$(mktemp)
+      jq ".usbBackup[$i].timeout=\"0\"" $usbBackupFile > $handover
+      mv $handover $usbBackupFile
     fi
     if lsblk /dev/disk/by-uuid/$execUUID >> /dev/null 2>&1 && [[ "$timeout" = "0" ]] ; then
-      sed -i -e ${count}c"currently_executing#$execDir#$execUUID#$execExclude" $usbBackupFile
+      echo
+      if [[ "$1" != "" ]] ; then
+        bash -c "$1"
+      fi
+      echo
+
+      handover=$(mktemp)
+      jq ".usbBackup[$i].timeout=\"currently_executing\"" $usbBackupFile > $handover
+      mv $handover $usbBackupFile
+      
       umask 0000
       backupTime=`date +"%Y-%m-%d--%H-%M"`
-      mntPath=$usbBackupPath/mount/${backupTime}_ID-$count
+      mntPath=$usbBackupPath/mount/${backupTime}_ID-$ID
       mntPathrm=$usbBackupPath/mount/*
       mkdir -p $mntPath
 
@@ -72,7 +95,11 @@ function execution {
       echo -e "mount /dev/disk/by-uuid/$execUUID $mntPath\n"
       if ! mount -v /dev/disk/by-uuid/$execUUID $mntPath ; then
         echo "mount failed!" >&2
-        sed -i -e ${count}c"0#$execDir#$execUUID#$execExclude" $usbBackupFile
+        
+        handover=$(mktemp)
+        jq ".usbBackup[$i].timeout=\"0\"" $usbBackupFile > $handover
+        mv $handover $usbBackupFile
+
       else
 
         # calculate $rsyncPath (path to copy to)
@@ -96,8 +123,10 @@ function execution {
           echo "rsync --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file $execDir $rsyncPath"
           rsync --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file $execDir $rsyncPath | tee -a $mntPath/$HOSTNAME/backuptime_$rsyncDir.txt
         else
-          echo "rsync --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file --exclude={$execExclude} $execDir $rsyncPath"
-          rsync --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file --exclude={$execExclude} $execDir $rsyncPath | tee -a $mntPath/$HOSTNAME/backuptime_$rsyncDir.txt
+          rsyncExclude=$(echo -n "$execExclude" | sed -e "s/'\([^']*\)',*/--exclude='\1' /g")
+          echo $rsyncExclude
+          eval echo rsync --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file $rsyncExclude $execDir $rsyncPath
+          eval rsync --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file $rsyncExclude $execDir $rsyncPath | tee -a $mntPath/$HOSTNAME/backuptime_$rsyncDir.txt
         fi
 
         # write end time to drive
@@ -106,19 +135,22 @@ function execution {
         # unmount drive
         echo "umount $mntPath"
         # try 5 times to unmount with 2s pause in between
-        for i in {1..5} ; do
+        for x in {1..5} ; do
           umount $mntPath && break
           echo "Failed to unmount drive, retry in 2s.."
-          sleep 2
+          sleep 2 ; false #retur error code to echo "Failed 5 times. Skipping unount." >&2
         done || echo "Failed 5 times. Skipping unount." >&2
-        time=`date +"%H%M"`
-        sed -i -e ${count}c"$time#$execDir#$execUUID#$execExclude" $usbBackupFile
+        time2=`date +"%H:%M"`
+        
+        handover=$(mktemp)
+        jq ".usbBackup[$i].timeout=\"$time2\"" $usbBackupFile > $handover
+        mv $handover $usbBackupFile
       fi
       rmdir -p $mntPathrm 2> /dev/null
       echo -e "\n/-/-/  USB-Backup complete!  /-/-/\n"
     fi
     count=$(($count+1))
-  done < $usbBackupFile
+  done
 }
 
 if [[ "$1" = "" ]] ; then
@@ -127,12 +159,21 @@ if [[ "$1" = "" ]] ; then
 fi
 
 case $1 in
-  exec) execution
+  exec) execution "$2"
         ;;
 
   prog) echo -e -n "\033[33m"
         if [[ -d "$2" ]] && [[ `lsblk /dev/disk/by-uuid/$3` ]] ; then
-          echo "0#$2#$3#$4" >> $usbBackupFile
+        count=0
+        handover=$(mktemp)
+        while ! [[ "`jq .usbBackup[$count].dir $usbBackupFile`" = "null" ]] ; do
+          count=$(($count+1))
+        done
+          
+          #jo -p usbBackup=$(jo -a $(jo ID= timeout= dir= uuid= exclude= )) > $usbBackupFile
+          array=".usbBackup[$count]"
+          jq " $array.ID=$(($count+1)) | $array.timeout=\"0\" | $array.dir=\"$2\" | $array.uuid=\"$3\" | $array.exclude=\"$4\" " $usbBackupFile > $handover
+          mv $handover $usbBackupFile
           echo -e "\033[36mMSG   :\033[32m Saved!\033[0m"
         else
           echo -e "\033[31mERROR :\033[33m Error DIR or UUID does not exsist!\033[0m" >&2
@@ -140,18 +181,33 @@ case $1 in
         ;;
 
     ls) lsblk -f
+        handover=$(mktemp)
         echo -e "\033[36m"
-        echo -e "ID#DIR#UUID#EXCLUDE\n" > $usbBackup_ls
-        while read line ; do
-          echo "$count#`echo $line | cut -d'#' -f 2`#`echo $line | cut -d'#' -f 3`#`echo $line | cut -d'#' -f 4`" >> $usbBackup_ls
-          count=$(($count+1))
-        done < $usbBackupFile
-        column $usbBackup_ls -t -s "#"
+        echo -e "ID#TIMEOUT#DIR#UUID#EXCLUDE\n" > $handover 
+        
+        for i in  $(seq 0 $(($(jq -r .usbBackup[].dir $usbBackupFile | wc -l)-1))) ; do
+          listDir=$(jq .usbBackup[$i].dir $usbBackupFile)
+          if ! [[ "$listDir" = "null" ]] ; then
+
+            ID=$(jq -r ".usbBackup[$i].ID" $usbBackupFile)
+            timeout=$(jq -r ".usbBackup[$i].timeout" $usbBackupFile)
+            dir=$(jq -r ".usbBackup[$i].dir" $usbBackupFile)
+            uuid=$(jq -r ".usbBackup[$i].uuid" $usbBackupFile)
+            exclude=$(jq -r ".usbBackup[$i].exclude" $usbBackupFile)
+            
+            echo -e "${ID}#${timeout}#${dir}#${uuid}#${exclude}" >> $handover
+          fi
+        done        
+        
+        column $handover -t -s "#"
         echo -e "\033[0m"
         ;;
 
     rm) if [[ $2 = [0-9][0-9] ]] || [[ $2 = [0-9] ]] ; then
-          sed -i "$2d" $usbBackupFile
+          handover=$(mktemp)
+          array=".usbBackup[$(($2-1))]"                            
+          jq " $array.timeout=null | $array.dir=null | $array.uuid=null | $array.exclude=null " $usbBackupFile > $handover
+          mv $handover $usbBackupFile
         else
           echo -e "\033[31mERROR :\033[33m '$2 is no argumet for rm'\033[0m" >&2
         fi

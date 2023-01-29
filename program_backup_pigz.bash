@@ -547,7 +547,7 @@ function execution {
       execNumber=$(jq -r .backup[$i].dwmtokeep $backupFile)
       execSource=$(jq -r .backup[$i].source $backupFile)
       execPath=$(jq -r .backup[$i].destination $backupFile)
-
+      
       date=`date +"%Y-%m-%d"`
       execStartTime=`date +"%H-%M"`
       execLogfile="$tempDir/${date}__start_${execStartTime}__name_$execName.log.temp"
@@ -567,7 +567,6 @@ function execution {
       mkdir -pv "${date}_${execStartTime}" >> $execLogfile
       cd "${date}_${execStartTime}" >> $execLogfile
 
-
       echo "[`date +"%Y-%m-%d %H:%M"`] [Backup] : START" >> $execLogfile
       if [[ "$flagBash" = "bash" ]] ; then
         echo "[`date +"%Y-%m-%d %H:%M"`] [bash] : " >> $execLogfile
@@ -579,9 +578,9 @@ function execution {
         echo -n "[`date +"%Y-%m-%d %H:%M"`] [mv] : " >> $execLogfile
         mv -v ${date}__start_${execStartTime}__name_${execName}.img.part ${date}_${execStartTime}/${date}__start_${execStartTime}__end_${execEndTime}__name_${execName}.img >> $execLogfile
       elif [[ "$flagImg" = "img" ]] && [[ "$flagZip" = "zip" ]]  ; then
-        echo "[`date +"%Y-%m-%d %H:%M"`] [dd and gzip] : " >> $execLogfile
+        echo "[`date +"%Y-%m-%d %H:%M"`] [dd and pigz] : " >> $execLogfile
         (
-          dd if=$execSource | gzip -c > ${date}__start_${execStartTime}__name_${execName}.img.gz.part
+          dd if=$execSource | pigz -p`cat /proc/cpuinfo | grep processor | wc -l` -c > ${date}__start_${execStartTime}__name_${execName}.img.gz.part
         ) 2>> $execLogfile
         execEndTime=`date +"%H-%M"`
         echo -n "[`date +"%Y-%m-%d %H:%M"`] [mv] : " >> $execLogfile
@@ -595,34 +594,34 @@ function execution {
       ##  TAR und ZIP  ##
 
       if [[ "$flagZip" = "zip" ]] && [[ "$flagTar" = "tar" ]] ; then
-        echo "[`date +"%Y-%m-%d %H:%M"`] [tar and gzip] :" >> $execLogfile
+        echo "[`date +"%Y-%m-%d %H:%M"`] [tar and pigz] :" >> $execLogfile
         ( 
           cd $execSource
           execSourceEmpty=$(echo *) # "*" then its empty
           if [[ "$execSourceEmpty" != "*" ]] ; then
-            tar czf "$execPath/${date}_${execStartTime}/${date}__start_${execStartTime}__name_${execName}.tar.gz.part" *
+            tar c * | pigz -c -p`cat /proc/cpuinfo | grep processor | wc -l` > "$execPath/${date}_${execStartTime}/${date}__start_${execStartTime}__name_${execName}.tar.gz.part"
             execEndTime=`date +"%H-%M"`
-            echo "[`date +"%Y-%m-%d %H:%M"`] [tar and gzip] : END"
+            echo "[`date +"%Y-%m-%d %H:%M"`] [tar and pigz] : END"
             echo -n "[`date +"%Y-%m-%d %H:%M"`] [mv] : "
             mv -v "$execPath/${date}_${execStartTime}/${date}__start_${execStartTime}__name_${execName}.tar.gz.part" "$execPath/${date}_${execStartTime}/${date}__start_${execStartTime}__end_${execEndTime}__name_${execName}.tar.gz" >> $execLogfile
           else
-            echo "[`date +"%Y-%m-%d %H:%M"`] [tar and gzip] : Directory empty, no data to save!"
-            echo "[`date +"%Y-%m-%d %H:%M"`] [tar and gzip] : END"
+            echo "[`date +"%Y-%m-%d %H:%M"`] [tar and pigz] : Directory empty, no data to save!"
+            echo "[`date +"%Y-%m-%d %H:%M"`] [tar and pigz] : END"
             echo "[`date +"%Y-%m-%d %H:%M"`] [rmdir] : Delete empty folder $execPath/${date}_${execStartTime}"
             rmdir $execPath/${date}_${execStartTime}
           fi
         ) >> $execLogfile
       elif [[ "$flagZip" = "zip" ]] && [[ "$flagTar" = "" ]] && [[ "$flagImg" = "" ]] ; then
-        echo "[`date +"%Y-%m-%d %H:%M"`] [gzip] :" >> $execLogfile
+        echo "[`date +"%Y-%m-%d %H:%M"`] [pigz] :" >> $execLogfile
         execSourceEmpty=$(echo *)
         if [[ "$execSourceEmpty" != "*" ]] ; then
-          gzip -r * 2>> $execLogfile
+          pigz -r -p`cat /proc/cpuinfo | grep processor | wc -l` * 2>> $execLogfile
         else
-          echo "[`date +"%Y-%m-%d %H:%M"`] [gzip] : Directory empty, no data to save!" >> $execLogfile
+          echo "[`date +"%Y-%m-%d %H:%M"`] [pigz] : Directory empty, no data to save!" >> $execLogfile
           echo "[`date +"%Y-%m-%d %H:%M"`] [rmdir] : Delete empty folder $execPath/${date}_${execStartTime}"
           rmdir $execPath/${date}_${execStartTime}
         fi
-        echo "[`date +"%Y-%m-%d %H:%M"`] [gzip] : END" >> $execLogfile
+        echo "[`date +"%Y-%m-%d %H:%M"`] [pigz] : END" >> $execLogfile
       elif [[ "$flagZip" = "" ]] && [[ "$flagTar" = "tar" ]] ; then
         echo "[`date +"%Y-%m-%d %H:%M"`] [tar] :" >> $execLogfile
         (
@@ -747,7 +746,6 @@ while : ; do
             if test -e $2 && test -d $2 ; then
               echo -e "\n\033[36mMSG   : \033[32mChanging \033[37mstandart backup path to \033[33m$2"
               echo $2 > $backupPath
-              renderAll
               echo -e "\033[36mMSG   : \033[32mchanged \033[37mstandart backup path to \033[33m$2\n"
             else
               echo -e "\n\033[31mError : \033[33mPath does not exist!\n"
@@ -1084,7 +1082,6 @@ while : ; do
                             echo -e "\033[36mMSG   : \033[33mProgram files deleted!\n"
                             ;;
               *)    echo -e "\n\033[36mMSG   : \033[32mProgram files not deleted!\n"
-                    ;;
             esac
             break
             ;;
