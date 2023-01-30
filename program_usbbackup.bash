@@ -59,8 +59,8 @@ function help {
 \033[0m"
 }
 
-# $1: start command
-# $2: end command
+# $1: variable containing start command, e.g. '$start_cmd'
+# $2: variable containing end   command, e.g. '$end_cmd'
 function execution {
   time=`date +"%H:%M"`
   for i in  $(seq 0 $(( $(jq -r .usbBackup[].ID $usbBackupFile | wc -l)-1))) ; do
@@ -77,8 +77,8 @@ function execution {
     fi
     if lsblk /dev/disk/by-uuid/$execUUID >> /dev/null 2>&1 && [[ "$timeout" = "0" ]] ; then
       if [[ "$1" != "" ]] ; then
-        echo -e "\nexecute start command:"
-        bash -c "$1"
+        echo -e "\nexecute start command: $(eval echo $1)"
+        eval eval $1 # double eval: first eval expands '$start_cmd' to real command string, second eval evaluates command
         echo
       fi
 
@@ -150,8 +150,8 @@ function execution {
       rmdir -p $mntPathrm 2> /dev/null
 
       if [[ "$2" != "" ]] ; then
-        echo -e "\nexecute end command:"
-        bash -c "$2"
+        echo -e "\nexecute end command: $(eval echo $2)"
+        eval eval $2 # double eval: first eval expands '$start_cmd' to real command string, second eval evaluates command
         echo
       fi
 
@@ -167,7 +167,9 @@ if [[ "$1" = "" ]] ; then
 fi
 
 case $1 in
-  exec) execution "$2" "$3"
+  exec) start_cmd=$2
+        end_cmd=$3
+        execution '$start_cmd' '$end_cmd'
         ;;
 
   prog) echo -e -n "\033[33m"
