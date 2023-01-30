@@ -766,7 +766,7 @@ while : ; do
             if [[ "$2" =~ ^[0-9][0-9]$ ]] || [[ "$2" =~ ^[0-9]$ ]] ; then
 
               deletedLine=`jq .backup[$(($2-1))].name $backupFile`
-              
+
               if [[ "$deletedLine" = "null" ]] ; then
                 echo -e "\n\033[31mError : \033[33mBackup ID $2 does not exsist!\n"
                 break
@@ -776,7 +776,7 @@ while : ; do
 
               handoverFile=$(mktemp)
               count=0
-              while ! [[ "`jq .backup[$count].ID $deactBackupFile`" = "null" ]] ; do
+              while ! [[ "`jq .backup[$count].name $deactBackupFile`" = "null" ]] ; do
                 count=$(($count+1))
               done
 
@@ -789,8 +789,8 @@ while : ; do
               array=".backup[$count]"
               jq "$array.ID=$(($count+1)) | $array.name=$deactName | $array.flag=$deactFlag | $array.dwmtokeep=$deactNumber | $array.source=$deactSource | $array.destination=$deactDestination " $deactBackupFile > $handoverFile
               mv $handoverFile $deactBackupFile
-              
-              array=".backup[$(($2-1))]"                            
+
+              array=".backup[$(($2-1))]"
               jq " $array.name=null | $array.flag=null | $array.dwmtokeep=null | $array.source=null | $array.destination=null " $backupFile > $handoverFile
               mv $handoverFile $backupFile
 
@@ -816,8 +816,8 @@ while : ; do
             fi
             if [[ "$2" =~ ^[0-9][0-9]$ ]] || [[ "$2" =~ ^[0-9]$ ]] ; then
 
-              deletedLine=`jq .backup[$(($2-1))].name $backupFile`
-              
+              deletedLine=`jq .backup[$(($2-1))].name $deactBackupFile`
+
               if [[ "$deletedLine" = "null" ]] ; then
                 echo -e "\n\033[31mError : \033[33mBackup ID $2 does not exsist in deactivation list\n"
                 break
@@ -829,11 +829,11 @@ while : ; do
               reactNumber=$(jq -r ".backup[$(($2-1))].dwmtokeep" $deactBackupFile)
               reactSource=$(jq -r ".backup[$(($2-1))].source" $deactBackupFile)
               reactDestination=$(jq -r ".backup[$(($2-1))].destination" $deactBackupFile)
-   
+
               programmBackup "$reactName" "$reactFlag" "$reactNumber" "$reactSource" "$reactDestination"
 
               if [[ $reProgram = 1 ]] ; then
-                array=".backup[$(($2-1))]"                            
+                array=".backup[$(($2-1))]"
                 jq " $array.name=null | $array.flag=null | $array.dwmtokeep=null | $array.source=null | $array.destination=null " $deactBackupFile > $handoverFile
                 mv $handoverFile $deactBackupFile
                 echo -e "\033[36mMSG   : \033[32mReactivated backup ID $2."
@@ -887,7 +887,7 @@ while : ; do
 
             if [[ "$2" =~ ^[0-9][0-9]$ ]] || [[ "$2" =~ ^[0-9]$ ]] ; then
               deletedLine=`jq .backup[$(($2-1))].name $backupFile`
-              
+
               if [[ "$deletedLine" = "null" ]] ; then
                 echo -e "\n\033[31mError : \033[33mBackup ID $2 does not exsist!\n"
                 break
@@ -910,8 +910,8 @@ while : ; do
               mv $handoverFile $trashBackupFile
 
               echo -e "\n\033[36mMSG   : \033[37mCopied backup \033[37mID-$2 to trashbin"
-              
-              array=".backup[$(($2-1))]"                            
+
+              array=".backup[$(($2-1))]"
               jq " $array.name=null | $array.flag=null | $array.dwmtokeep=null | $array.source=null | $array.destination=null " $backupFile > $handoverFile
               mv $handoverFile $backupFile
 
@@ -939,8 +939,8 @@ while : ; do
             fi
 
             if [[ "$2" =~ ^[0-9][0-9]$ ]] || [[ "$2" =~ ^[0-9]$ ]] ; then
-              deletedLine=`jq .backup[$(($2-1))].name $backupFile`
-              
+              deletedLine=`jq .backup[$(($2-1))].name $trashBackupFile`
+
               if [[ "$deletedLine" = "null" ]] ; then
                 echo -e "\n\033[31mError : \033[33mBackup ID $2 does not exsist in trashbin\n"
                 break
@@ -952,11 +952,11 @@ while : ; do
               reNumber=$(jq -r ".backup[$(($2-1))].dwmtokeep" $trashBackupFile)
               reSource=$(jq -r ".backup[$(($2-1))].source" $trashBackupFile)
               reDestination=$(jq -r ".backup[$(($2-1))].destination" $trashBackupFile)
-   
+
               programmBackup "$reName" "$reFlag" "$reNumber" "$reSource" "$reDestination"
 
               if [[ $reProgram = 1 ]] ; then
-                array=".backup[$(($2-1))]"                            
+                array=".backup[$(($2-1))]"
                 jq " $array.name=null | $array.flag=null | $array.dwmtokeep=null | $array.source=null | $array.destination=null " $trashBackupFile > $handoverFile
                 mv $handoverFile $trashBackupFile
                 echo -e "\033[36mMSG   : \033[32mRestored backup ID $2 from trashbin."
@@ -1004,7 +1004,7 @@ while : ; do
                 echo -e "\n\033[31mError : \033[33mLOG ID $2 does not exsist!\n"
                 break
               fi
-              logDest=`jq -r ".backup[$(($2-1))].destination" $backupFile`              
+              logDest=`jq -r ".backup[$(($2-1))].destination" $backupFile`
               if [[ "`echo $logDest | cut -b 1`" = "*" ]] ; then
                 cd "`cat $backupPath``echo $logDest | cut -b 2-`"
               else
