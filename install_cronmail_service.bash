@@ -22,7 +22,7 @@ do
 done
 
 package="msmtp mailutils"
-${package_manager} ${package}
+sudo ${package_manager} ${package}
 
 
 home=$HOME
