@@ -1,18 +1,29 @@
 #!/bin/bash
+
 if [[ "$1" = "--help" ]] || [[ "$1" = "-h" ]] || [[ "$1" = "help" ]] || [[ "$1" = "" ]] ; then
-  echo -e " Usage : $0 [OPTION] [DISTRO]
+  echo -e " Usage : $0 [OPTION]
             options
               [install] >> installs the mail service
-              [DEBUG]   >> installs the mail service in DEBUG Mode
-            distros
-              [debian]  >> installs the debian Based pagages"
+              [DEBUG]   >> installs the mail service in DEBUG Mode"
   exit
 fi
-if [[ "$2" = "debian" ]] ; then
-  sudo apt remove msmtp msmtp-mta mailutils --yes
-  sudo apt purge msmtp msmtp-mta mailutils --yes
-  sudo apt install msmtp msmtp-mta mailutils
-fi
+
+declare -A osInfo;
+osInfo[/etc/debian_version]="apt install -y msmtp-mta"
+osInfo[/etc/alpine-release]="apk --update add"
+osInfo[/etc/centos-release]="yum install -y"
+osInfo[/etc/fedora-release]="dnf install -y"
+
+for f in ${!osInfo[@]}
+do
+    if [[ -f $f ]];then
+        package_manager=${osInfo[$f]}
+    fi
+done
+
+package="msmtp mailutils"
+${package_manager} ${package}
+
 
 home=$HOME
 path=""
