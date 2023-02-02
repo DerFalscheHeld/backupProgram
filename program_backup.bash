@@ -536,12 +536,11 @@ function execution {
       done
     fi
 
-      execName=$(jq .backup[$i].name $backupFile)
-      execNumber=$(jq .backup[$i].dwmtokeep $backupFile)
-      execSource=$(jq .backup[$i].source $backupFile)
-      execPath=$(jq .backup[$i].destination $backupFile)
+    if [[ $(jq -r .backup[$i].flag $backupFile) = "null" ]] ; then
+      breakval=1
+    fi
 
-    if [[ "$execName" != "null" ]] && [[ "$execNumber" != "null" ]]  &&  [[ "$execSource" != "null" ]]  &&  [[ "$execPath" != "null" ]] && [[ $breakval -eq 0 ]] || [[ $execAllBackups -eq 1 ]] ; then
+    if [[ $breakval -eq 0 ]] || [[ $execAllBackups -eq 1 ]] && [[ $breakval -eq 0 ]] ; then
 
       execName=$(jq -r .backup[$i].name $backupFile)
       execNumber=$(jq -r .backup[$i].dwmtokeep $backupFile)
