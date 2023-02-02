@@ -46,7 +46,9 @@ There are also install scripts for each tool and an additional install script to
 >'pigz' and 'rsync' might already be installed, so execute
 >
 >`sudo pacman -Sy rsync --needed`
+>
 > that is
+>
 >`sudo pacman -Sy rsync pigz --needed`
 >
 >instead.
