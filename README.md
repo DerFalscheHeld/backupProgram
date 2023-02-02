@@ -33,6 +33,24 @@ There are also install scripts for each tool and an additional install script to
 >
 >`sudo dnf install -y pigz`
 
+### Arch Linux install command
+>Install all required dependencies with:
+>
+>`sudo pacman -Sy jo jq rsync`
+>
+>When you use [program_backup_pigz.bash](https://github.com/DerFalscheHeld/backupProgram/blob/main/program_backup_pigz.bash), also run this command: 
+>
+>`sudo pacman -Sy pigz`
+>
+#### Note to Manjaro users:
+>'pigz' and 'rsync' might already be installed, so execute
+>
+>`sudo pacman -Sy rsync --needed`
+> that is
+>`sudo pacman -Sy rsync pigz --needed`
+>
+>instead.
+
 ## How to install the programs
 
 > ### [backup  > with gzip](https://github.com/DerFalscheHeld/backupProgram/blob/main/program_backup.bash)
