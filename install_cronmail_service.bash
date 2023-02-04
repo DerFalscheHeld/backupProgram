@@ -13,6 +13,8 @@ osInfo[/etc/debian_version]="apt install -y msmtp-mta"
 osInfo[/etc/alpine-release]="apk --update add"
 osInfo[/etc/centos-release]="yum install -y"
 osInfo[/etc/fedora-release]="dnf install -y"
+osInfo[/etc/arch-releaes]="pacman -Sy msmtp-mta"
+osInfo[/etc/manjaro-release]="pacman -Sy"
 
 for f in ${!osInfo[@]}
 do
