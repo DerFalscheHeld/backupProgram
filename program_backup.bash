@@ -11,7 +11,7 @@
 #   bash   : bash befehl ausführen    ## bach -c "<string>"
 #   copy   : cp befehl
 #   img    : partition / device zu img datei machen
-#   zip    : pigz
+#   zip    : gzip
 #   tar    : tar
 #   log    : logging
 

@@ -33,22 +33,7 @@ if [[ $UID != 0 ]] ; then
   exit
 fi
 load 10
-path=""
-count=1
-while : ; do
-  pathPart=`echo $0 | cut -d'/' -f $count`
-  if [[ $count -eq 1 ]] ; then
-    path="${path}${pathPart}"
-  else
-    if [[ "`echo $0 | cut -d'/' -f $(($count+1))`" = "" ]] ; then
-      path="${path}/program_usbbackup.bash"
-      break
-    else
-      path="${path}/${pathPart}"
-    fi
-  fi
-  count=$(($count+1))
-done
+path="${0%/*}/program_usbbackup.bash"
 load 50
 cp $path /usr/local/bin/usbbackup
 chmod 755 /usr/local/bin/usbbackup

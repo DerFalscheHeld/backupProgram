@@ -1,5 +1,4 @@
 #!/bin/bash
-
 if [[ "$1" = "--help" ]] || [[ "$1" = "-h" ]] || [[ "$1" = "help" ]] || [[ "$1" = "" ]] ; then
   echo -e " Usage : $0 [OPTION]
             options
@@ -28,23 +27,7 @@ sudo ${package_manager} ${package}
 
 
 home=$HOME
-path=""
-count=1
-while : ; do
-  pathPart=`echo $0 | cut -d'/' -f $count`
-  if [[ $count -eq 1 ]] ; then
-    path="${path}${pathPart}"
-  else
-    if [[ "`echo $0 | cut -d'/' -f $(($count+1))`" = "" ]] ; then
-      path="${path}/"
-      break
-    else
-      path="${path}/${pathPart}"
-    fi
-  fi
-  count=$(($count+1))
-done
-
+path="${0%/*}/"
 configDir=config_cronmail_service
 cp -f $path$configDir/msmtprc.conf $home/.msmtprc
 
