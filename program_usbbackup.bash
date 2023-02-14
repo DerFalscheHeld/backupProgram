@@ -210,6 +210,7 @@ case $1 in
         done
 
         column $handover -t -s "#"
+        rm $handover
         echo -e "\033[0m"
         ;;
 
