@@ -181,9 +181,9 @@ function renderListTemp {
 }
 
 function list {
-  renderTemp1=$(mktemp)
-  renderTemp2=$(mktemp)
-  renderTemp3=$(mktemp)
+  renderTemp1=/dev/shm/.backupRender1.temp
+  renderTemp2=/dev/shm/.backupRender2.temp
+  renderTemp3=/dev/shm/.backupRender3.temp
   renderListTemp $1 > $renderTemp1
   column $renderTemp1 -t -s "#" > $renderTemp2
   cat $renderTemp2 > $renderTemp1
@@ -488,7 +488,7 @@ function programmBackup {
     if [[ $name -eq 1 && $namelength -eq 0 && $flag -eq 1 && $flagsyntax -eq 0 && $flagTimeLess -eq 0 && $flagTimeMany -eq 0 && $flagError -eq 0 && $number -eq 1 && $sour -eq 1 && $dest -eq 1 && $destsyntax -eq 0 ]] ; then
       reProgram=1
       count=0
-      handoverFile=$(mktemp)
+      handoverFile=/dev/shm/.backupHandover1.temp
       echo -e "\033[36mMSG   : \033[33msaving..."
       while ! [[ "`jq .backup[$count].name $backupFile`" = "null" ]] ; do
         count=$(($count+1))
@@ -773,7 +773,7 @@ while : ; do
 
               echo -e "\n\033[36mMSG   : \033[37mDeactivating backup \033[37mID-$2 ..."
 
-              handoverFile=$(mktemp)
+              handoverFile=/dev/shm/.backupHandover1.temp
               count=0
               while ! [[ "`jq .backup[$count].name $deactBackupFile`" = "null" ]] ; do
                 count=$(($count+1))
@@ -822,7 +822,7 @@ while : ; do
                 break
               fi
 
-              handoverFile=$(mktemp)
+              handoverFile=/dev/shm/.backupHandover1.temp
               reactName=$(jq -r ".backup[$(($2-1))].name" $deactBackupFile)
               reactFlag=$(jq -r ".backup[$(($2-1))].flag" $deactBackupFile)
               reactNumber=$(jq -r ".backup[$(($2-1))].dwmtokeep" $deactBackupFile)
@@ -892,7 +892,7 @@ while : ; do
                 break
               fi
 
-              handoverFile=$(mktemp)
+              handoverFile=/dev/shm/.backupHandover1.temp
               count=0
               while ! [[ "`jq .backup[$count].name $trashBackupFile`" = "null" ]] ; do
                 count=$(($count+1))
@@ -945,7 +945,7 @@ while : ; do
                 break
               fi
 
-              handoverFile=$(mktemp)
+              handoverFile=/dev/shm/.backupHandover1.temp
               reName=$(jq -r ".backup[$(($2-1))].name" $trashBackupFile)
               reFlag=$(jq -r ".backup[$(($2-1))].flag" $trashBackupFile)
               reNumber=$(jq -r ".backup[$(($2-1))].dwmtokeep" $trashBackupFile)

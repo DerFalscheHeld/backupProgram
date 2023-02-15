@@ -71,7 +71,7 @@ function execution {
     timeout=`jq -r .usbBackup[$i].timeout $usbBackupFile`
 
     if [[ "$timeout" = "$time" ]] ; then
-      handover=$(mktemp)
+      handover=/dev/shm/.usbbackupHandover.temp
       jq ".usbBackup[$i].timeout=\"0\"" $usbBackupFile > $handover
       mv $handover $usbBackupFile
     fi
@@ -82,7 +82,7 @@ function execution {
         echo
       fi
 
-      handover=$(mktemp)
+      handover=/dev/shm/.usbbackupHandover.temp
       jq ".usbBackup[$i].timeout=\"currently_executing\"" $usbBackupFile > $handover
       mv $handover $usbBackupFile
 
@@ -97,7 +97,7 @@ function execution {
       if ! mount -v /dev/disk/by-uuid/$execUUID $mntPath ; then
         echo "mount failed!" >&2
 
-        handover=$(mktemp)
+        handover=/dev/shm/.usbbackupHandover.temp
         jq ".usbBackup[$i].timeout=\"0\"" $usbBackupFile > $handover
         mv $handover $usbBackupFile
 
@@ -143,7 +143,7 @@ function execution {
         done || echo "Failed 5 times. Skipping unount." >&2
         time2=`date +"%H:%M"`
 
-        handover=$(mktemp)
+        handover=/dev/shm/.usbbackupHandover.temp
         jq ".usbBackup[$i].timeout=\"$time2\"" $usbBackupFile > $handover
         mv $handover $usbBackupFile
       fi
@@ -175,7 +175,7 @@ case $1 in
   prog) echo -e -n "\033[33m"
         if [[ -d "$2" ]] && [[ `lsblk /dev/disk/by-uuid/$3` ]] ; then
         count=0
-        handover=$(mktemp)
+        handover=/dev/shm/.usbbackupHandover.temp
         while ! [[ "`jq .usbBackup[$count].dir $usbBackupFile`" = "null" ]] ; do
           count=$(($count+1))
         done
@@ -191,7 +191,7 @@ case $1 in
         ;;
 
     ls) lsblk -f
-        handover=$(mktemp)
+        handover=/dev/shm/.usbbackupHandover.temp
         echo -e "\033[36m"
         echo -e "ID#TIMEOUT#DIR#UUID#EXCLUDE\n" > $handover
 
@@ -215,7 +215,7 @@ case $1 in
         ;;
 
     rm) if [[ $2 = [0-9][0-9] ]] || [[ $2 = [0-9] ]] ; then
-          handover=$(mktemp)
+          handover=/dev/shm/.usbbackupHandover.temp
           array=".usbBackup[$(($2-1))]"
           jq " $array.timeout=null | $array.dir=null | $array.uuid=null | $array.exclude=null " $usbBackupFile > $handover
           mv $handover $usbBackupFile
