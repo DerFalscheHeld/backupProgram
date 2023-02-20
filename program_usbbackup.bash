@@ -220,7 +220,7 @@ case $1 in
           jq " $array.timeout=null | $array.dir=null | $array.uuid=null | $array.exclude=null " $usbBackupFile > $handover
           mv $handover $usbBackupFile
         else
-          echo -e "\033[31mERROR :\033[33m '$2 is no argumet for rm'\033[0m" >&2
+          echo -e "\033[31mERROR :\033[33m '$2' is no argumet for rm\033[0m" >&2
         fi
         ;;
 
@@ -228,7 +228,7 @@ case $1 in
             json_data=$(cat $usbBackupFile)
             echo $json_data | jq ".usbBackup[$(($2-1))].timeout = \"0\"" > $usbBackupFile
         else
-          echo -e "\033[31mERROR :\033[33m '$2 is no argumet for resetTimer '\033[0m" >&2
+          echo -e "\033[31mERROR :\033[33m '$2' is no argumet for resetTimer \033[0m" >&2
         fi
         ;;
 
