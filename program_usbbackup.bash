@@ -18,7 +18,7 @@ fi
 
 function help {
   backupTime=`date +"%Y-%m-%d--%H-%M"`
-  mntPath=$usbBackupPath/mount/$backupTime
+  mntPath=$usbBackupPath/mount/${backupTime}_ID1
   echo -e "
   usbbackup [option] [arguments.....]
 
@@ -32,9 +32,13 @@ function help {
          [<command>] >> insert bash command in <command>, this command executes before disk will be mounted
          [<start cmd>] [<end cmd>] >> command <start cmd> executes before disk will be mounted, command <end cmd> executes after disk is unmounted
 
-    prog [DIR] [UUID] [EXCLUDE] >> prog uses this command
+    prog [DIR] [UUID] [EXCLUDE] >> uses this to program a new usbbackup
 
     resetTimer [1-99] >> reset timer so that this usbbackup will be executed with the next `usbbackup exec` call
+
+  ------------
+  | EXAMPLES |
+  ------------
 
     Structure
       /data1/data2
@@ -42,20 +46,20 @@ function help {
       /data1/test.txt
       /data1/hello world.txt
 
-    EXAMPLE >> usbbackup prog 68EE9C02EE9BC72A /data1
-    EXECUTES rsync\033[35m --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file \033[36m/data1 \033[37m $mntPath/$HOSTNAME/data1
+    EXAMPLE >> $ usbbackup prog 68EE9C02EE9BC72A /data1
+    EXECUTES $ rsync\033[35m --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file \033[36m/data1 \033[37m $mntPath/$HOSTNAME/data1
 
-    EXAMPLE >> usbbackup prog 68EE9C02EE9BC72A /data1/ \033[32m# preferable, else rsync will create folder $HOSTNAME/data1/data1\033[37m
-    EXECUTES rsync\033[35m --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file \033[36m/data1/ \033[37m $mntPath/$HOSTNAME/data1
+    EXAMPLE >> $ usbbackup prog 68EE9C02EE9BC72A /data1/ \033[32m# preferable, else rsync will create folder $HOSTNAME/data1/data1\033[37m
+    EXECUTES $ rsync\033[35m --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file \033[36m/data1/ \033[37m $mntPath/$HOSTNAME/data1
 
-    EXAMPLE >> usbbackup prog 68EE9C02EE9BC72A /data1/ \"'data2'\"
-    EXECUTES rsync\033[35m --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file --exclude=\033[32m{\033[36m'data2'\033[32m}\033[37m \033[36m/data1/ \033[37m $mntPath/$HOSTNAME/data1
+    EXAMPLE >> $ usbbackup prog 68EE9C02EE9BC72A /data1/ \"'data2'\"
+    EXECUTES $ rsync\033[35m --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file --exclude=\033[32m{\033[36m'data2'\033[32m}\033[37m \033[36m/data1/ \033[37m $mntPath/$HOSTNAME/data1
 
-    EXAMPLE >> usbbackup prog 68EE9C02EE9BC72A /data1/ \"'data2','test.txt'\"
-    EXECUTES rsync\033[35m --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file --exclude=\033[32m{\033[36m'data2','test.txt'\033[32m}\033[37m \033[36m/data1/ \033[37m $mntPath/$HOSTNAME/data1
+    EXAMPLE >> $ usbbackup prog 68EE9C02EE9BC72A /data1/ \"'data2','test.txt'\"
+    EXECUTES $ rsync\033[35m --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file --exclude=\033[32m{\033[36m'data2','test.txt'\033[32m}\033[37m \033[36m/data1/ \033[37m $mntPath/$HOSTNAME/data1
 
-    EXAMPLE >> usbbackup prog 68EE9C02EE9BC72A /data1/ \"'data2','data3','hello world.txt'\"
-    EXECUTES rsync\033[35m --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file --exclude=\033[32m{\033[36m'data2','data3','hello world.txt'\033[32m}\033[37m \033[36m/data1/ \033[37m $mntPath/$HOSTNAME/data1
+    EXAMPLE >> $ usbbackup prog 68EE9C02EE9BC72A /data1/ \"'data2','data3','hello world.txt'\"
+    EXECUTES $ rsync\033[35m --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file --exclude=\033[32m{\033[36m'data2','data3','hello world.txt'\033[32m}\033[37m \033[36m/data1/ \033[37m $mntPath/$HOSTNAME/data1
 \033[0m"
 }
 
@@ -70,12 +74,13 @@ function execution {
     execExclude=`jq -r .usbBackup[$i].exclude $usbBackupFile`
     timeout=`jq -r .usbBackup[$i].timeout $usbBackupFile`
 
-    if [[ "$timeout" = "$time" ]] ; then
+                                     # compatile to older versions
+    if [[ "$timeout" = "$time" ]] || [["$timeout" = "0" ]] ; then
       handover=/dev/shm/.usbbackupHandover.temp
-      jq ".usbBackup[$i].timeout=\"0\"" $usbBackupFile > $handover
+      jq ".usbBackup[$i].timeout=\"ready\"" $usbBackupFile > $handover
       mv $handover $usbBackupFile
     fi
-    if lsblk /dev/disk/by-uuid/$execUUID >> /dev/null 2>&1 && [[ "$timeout" = "0" ]] ; then
+    if lsblk /dev/disk/by-uuid/$execUUID >> /dev/null 2>&1 && [[ "$timeout" = "ready" ]] ; then
       if [[ "$1" != "" ]] ; then
         echo -e "\nexecute start command: $(eval echo $1)"
         eval eval $1 # double eval: first eval expands '$start_cmd' to real command string, second eval evaluates command
@@ -98,7 +103,7 @@ function execution {
         echo "mount failed!" >&2
 
         handover=/dev/shm/.usbbackupHandover.temp
-        jq ".usbBackup[$i].timeout=\"0\"" $usbBackupFile > $handover
+        jq ".usbBackup[$i].timeout=\"ready\"" $usbBackupFile > $handover
         mv $handover $usbBackupFile
 
       else
@@ -135,14 +140,15 @@ function execution {
 
         # unmount drive
         echo "umount $mntPath"
+
         # try 5 times to unmount with 2s pause in between
         for x in {1..5} ; do
           umount $mntPath && break
           echo "Failed to unmount drive, retry in 2s.."
           sleep 2 ; false #retur error code to echo "Failed 5 times. Skipping unount." >&2
         done || echo "Failed 5 times. Skipping unount." >&2
-        time2=`date +"%H:%M"`
 
+        time2=`date +"%H:%M"`
         handover=/dev/shm/.usbbackupHandover.temp
         jq ".usbBackup[$i].timeout=\"$time2\"" $usbBackupFile > $handover
         mv $handover $usbBackupFile
@@ -182,7 +188,7 @@ case $1 in
 
           #jo -p usbBackup=$(jo -a $(jo ID= timeout= dir= uuid= exclude= )) > $usbBackupFile
           array=".usbBackup[$count]"
-          jq " $array.ID=$(($count+1)) | $array.timeout=\"0\" | $array.dir=\"$2\" | $array.uuid=\"$3\" | $array.exclude=\"$4\" " $usbBackupFile > $handover
+          jq " $array.ID=$(($count+1)) | $array.timeout=\"ready\" | $array.dir=\"$2\" | $array.uuid=\"$3\" | $array.exclude=\"$4\" " $usbBackupFile > $handover
           mv $handover $usbBackupFile
           echo -e "\033[36mMSG   :\033[32m Saved!\033[0m"
         else
@@ -190,7 +196,7 @@ case $1 in
         fi
         ;;
 
-    ls) lsblk -f
+    ls) #lsblk -f
         handover=/dev/shm/.usbbackupHandover.temp
         echo -e "\033[36m"
         echo -e "ID#TIMEOUT#DIR#UUID#EXCLUDE\n" > $handover
@@ -226,7 +232,7 @@ case $1 in
 
     resetTimer) if [[ $2 = [0-9][0-9] ]] || [[ $2 = [0-9] ]] ; then
             json_data=$(cat $usbBackupFile)
-            echo $json_data | jq ".usbBackup[$(($2-1))].timeout = \"0\"" > $usbBackupFile
+            echo $json_data | jq ".usbBackup[$(($2-1))].timeout = \"ready\"" > $usbBackupFile
         else
           echo -e "\033[31mERROR :\033[33m '$2' is no argumet for resetTimer \033[0m" >&2
         fi
