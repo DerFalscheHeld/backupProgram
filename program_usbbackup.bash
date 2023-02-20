@@ -75,7 +75,7 @@ function execution {
     timeout=`jq -r .usbBackup[$i].timeout $usbBackupFile`
 
                                      # compatile to older versions
-    if [[ "$timeout" = "$time" ]] || [["$timeout" = "0" ]] ; then
+    if [[ "$timeout" = "$time" ]] || [[ "$timeout" = "0" ]] ; then
       handover=/dev/shm/.usbbackupHandover.temp
       jq ".usbBackup[$i].timeout=\"ready\"" $usbBackupFile > $handover
       mv $handover $usbBackupFile
