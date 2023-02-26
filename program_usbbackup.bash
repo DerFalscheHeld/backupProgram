@@ -34,7 +34,7 @@ function help {
 
     prog [DIR] [UUID] [EXCLUDE] >> uses this to program a new usbbackup
 
-    resetTimer [1-99] >> reset timer so that this usbbackup will be executed with the next `usbbackup exec` call
+    resetTimer [1-99] >> reset timer so that this usbbackup will be executed with the next \`usbbackup exec\` call
 
   ------------
   | EXAMPLES |
@@ -91,7 +91,7 @@ function execution {
       jq ".usbBackup[$i].timeout=\"currently_executing\"" $usbBackupFile > $handover
       mv $handover $usbBackupFile
 
-      umask 0000
+      umask 077
       backupTime=`date +"%Y-%m-%d--%H-%M"`
       mntPath=$usbBackupPath/mount/${backupTime}_ID-$ID
       mntPathrm=$usbBackupPath/mount/*

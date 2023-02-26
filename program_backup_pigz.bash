@@ -19,7 +19,7 @@
 # Frankensteins Monster      echo $[test$x=2] >> /dev/null #
 ############################################################
 
-umask 0177
+umask 177
 
 programmDir=/usr/local/etc/backup
 
@@ -516,7 +516,6 @@ function programmBackup {
 execAllBackups=0
 
 function execution {
-  umask 0000
   for i in  $(seq 0 $(( $(jq -r .backup[].ID $backupFile | wc -l)-1))) ; do
     Flagcut=$(jq -r .backup[$i].flag $backupFile)
     Flag=`echo $Flagcut | cut -b 1`
