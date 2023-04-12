@@ -210,12 +210,12 @@ function help {
   backup [option] [arguments.....]
 
   options:
-    ls []       >> lists all reProgram backups
+    ls []       >> lists all programmed backups
        [trash]  >> lists trashbin
        [deact]  >> lists all deactivated backups
        [all]    >> lists all 
 
-    rm [1-99]   >> delete a reProgram Backup with that ID [1-99]
+    rm [1-99]   >> delete a programmed backup with that ID [1-99]
        [trash]  >> delete the trashbin
        [deact]  >> delete the deactivation list
 
@@ -459,7 +459,7 @@ function programmBackup {
   elif [[ $flagTimeMany -eq 1 ]] ; then
     echo -e "\033[31mError : \033[33mFlag \"Backup has to many time specifications for execution!\""
   elif [[ $flagError -eq 1 ]] ; then
-    echo -e "\033[31mError : \033[33mFlag \"You can only use one of 'bash, img, tar, copy, '\""
+    echo -e "\033[31mError : \033[33mFlag \"You can only use one of 'bash, img, tar, copy, '\"."
   fi
 
   if [[ $number -eq 0 ]] ; then
@@ -693,12 +693,12 @@ function execution {
 
 while : ; do
   if [[ $UID != 0 ]] ; then
-    echo -e "\n\033[31mError : \033[33mYou are not root!\n"
+    echo -e "\033[31mError : \033[33mYou are not root!"
     break
   fi
   touchData
   if [[ $# -eq 7 ]] ; then
-    echo -e "\n\033[31mError : \033[33mTo many arguments!\n"
+    echo -e "\033[31mError : \033[33mTo many arguments!"
     break
   fi
   if [[ "$1" = "" ]] ; then
@@ -708,7 +708,7 @@ while : ; do
 
   while : ; do
     if [[ "`echo $2 | cut -b $count`" = "#" ]] || [[ "`echo $3 | cut -b $count`" = "#" ]] || [[ "`echo $4 | cut -b $count`" = "#" ]] || [[ "`echo $5 | cut -b $count`" = "#" ]] || [[ "`echo $6 | cut -b $count`" = "#" ]] ; then
-      echo -e "\n\033[31mError : \033[33mThe character '#' is not allowed!\n\033[0m"
+      echo -e "\033[31mError : \033[33mThe character '#' is not allowed!"
       breakval=1
       break
     fi
@@ -738,27 +738,27 @@ while : ; do
 
 
     path)   if [[ "$3" != "" ]] ; then
-              echo -e "\n\033[31mError : \033[33mTo many arguments for path.\n"
+              echo -e "\033[31mError : \033[33mTo many arguments for path."
               break
             fi
 
             if test -e $2 && test -d $2 ; then
-              echo -e "\n\033[36mMSG   : \033[32mChanging \033[37mstandart backup path to \033[33m$2"
+              echo -e "\n\033[36mMSG   : \033[32mChanging \033[37mstandard backup path to \033[33m$2"
               echo $2 > $backupPath
               renderAll
-              echo -e "\033[36mMSG   : \033[32mchanged \033[37mstandart backup path to \033[33m$2\n"
+              echo -e "\033[36mMSG   : \033[32mchanged \033[37mstandard backup path to \033[33m$2.\n"
             else
-              echo -e "\n\033[31mError : \033[33mPath does not exist!\n"
+              echo -e "\033[31mError : \033[33mPath does not exist!"
             fi
             break
             ;;
 
     deact)  if [[ "$3" != "" ]] ; then
-              echo -e "\n\033[31mError : \033[33mTo many arguments for deact.\n"
+              echo -e "\033[31mError : \033[33mTo many arguments for deact."
               break
             fi
             if [[ "$2" = "0" || "$2" = "00" ]] ; then
-              echo -e "\n\033[31mError : \033[33mBackup with ID $2 does not exsist!\n"
+              echo -e "\033[31mError : \033[33mBackup with ID $2 does not exists!"
               break
             fi
             if [[ "$2" =~ ^[0-9][0-9]$ ]] || [[ "$2" =~ ^[0-9]$ ]] ; then
@@ -766,7 +766,7 @@ while : ; do
               deletedLine=`jq .backup[$(($2-1))].name $backupFile`
 
               if [[ "$deletedLine" = "null" ]] ; then
-                echo -e "\n\033[31mError : \033[33mBackup ID $2 does not exsist!\n"
+                echo -e "\033[31mError : \033[33mBackup ID $2 does not exists!"
                 break
               fi
 
@@ -798,18 +798,18 @@ while : ; do
               list $deactBackupFile
 
             else
-              echo -e "\n\033[31mError : \033[33m'$2' is not an argument for deact\n"
+              echo -e "\033[31mError : \033[33m'$2' is not an argument for deact."
               break
             fi
             break
             ;;
 
     react)  if [[ "$3" != "" ]] ; then
-              echo -e "\n\033[31mError : \033[33mTo many arguments for react.\n"
+              echo -e "\033[31mError : \033[33mTo many arguments for react."
               break
             fi
             if [[ "$2" = "0" || "$2" = "00" ]] ; then
-              echo -e "\n\033[31mError : \033[33mBackup ID $2 does not exsist in deactivation list!\n"
+              echo -e "\033[31mError : \033[33mBackup ID $2 does not exists in deactivation list!"
               break
             fi
             if [[ "$2" =~ ^[0-9][0-9]$ ]] || [[ "$2" =~ ^[0-9]$ ]] ; then
@@ -817,7 +817,7 @@ while : ; do
               deletedLine=`jq .backup[$(($2-1))].name $deactBackupFile`
 
               if [[ "$deletedLine" = "null" ]] ; then
-                echo -e "\n\033[31mError : \033[33mBackup ID $2 does not exsist in deactivation list\n"
+                echo -e "\033[31mError : \033[33mBackup ID $2 does not exists in deactivation list."
                 break
               fi
 
@@ -841,19 +841,19 @@ while : ; do
               list $backupFile
               list $deactBackupFile
             else
-              echo -e "\n\033[31mError : \033[33m'$2' is not an argument for react\n"
+              echo -e "\033[31mError : \033[33m'$2' is not an argument for react."
             fi
             break
             ;;
 
 
     rm)     if [[ "$3" != "" ]] ; then
-              echo -e "\n\033[31mError : \033[33mTo many arguments for rm.\n"
+              echo -e "\033[31mError : \033[33mTo many arguments for rm."
               break
             fi
 
             if [[ "$2" = "trash" ]] ; then
-              echo -e -n "\n\033[35mQ & A?: \033[33mDo you really want to \033[31mdelete \033[33mthe trashbin? \033[37m[\033[32my\033[37m/\033[31mN\033[37m] : " ; 
+              echo -e -n "\033[35mQ & A?: \033[33mDo you really want to \033[31mdelete \033[33mthe trashbin? \033[37m[\033[32my\033[37m/\033[31mN\033[37m] : " ; 
               read option
               case $option in
                 yes|y|Yes|Y)  echo -e "\n\033[36mMSG   : \033[33mDeleting trashbin..."
@@ -865,7 +865,7 @@ while : ; do
               esac
               break
             elif [[ "$2" = "deact" ]] ; then
-              echo -e -n "\n\033[35mQ & A?: \033[33mDo you really want to \033[31mdelete \033[33mthe deactivation list? \033[37m[\033[32my\033[37m/\033[31mN\033[37m] : " ; 
+              echo -e -n "\033[35mQ & A?: \033[33mDo you really want to \033[31mdelete \033[33mthe deactivation list? \033[37m[\033[32my\033[37m/\033[31mN\033[37m] : " ; 
               read option
               case $option in
                 yes|y|Yes|Y)  echo -e "\n\033[36mMSG   : \033[33mDeleting deactivation list..."
@@ -879,7 +879,7 @@ while : ; do
             fi
 
             if [[ "$2" = "0" || "$2" = "00" ]] ; then
-              echo -e "\n\033[31mError : \033[33mBackup with ID $2 does not exsist!\n"
+              echo -e "\033[31mError : \033[33mBackup with ID $2 does not exists!"
               break
             fi
 
@@ -887,7 +887,7 @@ while : ; do
               deletedLine=`jq .backup[$(($2-1))].name $backupFile`
 
               if [[ "$deletedLine" = "null" ]] ; then
-                echo -e "\n\033[31mError : \033[33mBackup ID $2 does not exsist!\n"
+                echo -e "\033[31mError : \033[33mBackup ID $2 does not exists!"
                 break
               fi
 
@@ -919,7 +919,7 @@ while : ; do
               list $trashBackupFile
 
             else
-              echo -e "\n\033[31mError : \033[33m'$2' is not an argument for rm\n"
+              echo -e "\033[31mError : \033[33m'$2' is not an argument for rm."
               break
             fi
             break
@@ -927,12 +927,12 @@ while : ; do
 
 
     re)     if [[ "$3" != "" ]] ; then
-              echo -e "\n\033[31mError : \033[33mTo many arguments for re.\n"
+              echo -e "\033[31mError : \033[33mTo many arguments for re."
               break
             fi
 
             if [[ "$2" = "0" || "$2" = "00" ]] ; then
-              echo -e "\n\033[31mError : \033[33mBackup ID $2 does not exsist in trashbin!\n"
+              echo -e "\033[31mError : \033[33mBackup ID $2 does not exists in trashbin!"
               break
             fi
 
@@ -940,7 +940,7 @@ while : ; do
               deletedLine=`jq .backup[$(($2-1))].name $trashBackupFile`
 
               if [[ "$deletedLine" = "null" ]] ; then
-                echo -e "\n\033[31mError : \033[33mBackup ID $2 does not exsist in trashbin\n"
+                echo -e "\033[31mError : \033[33mBackup ID $2 does not exists in trashbin"
                 break
               fi
 
@@ -959,17 +959,17 @@ while : ; do
                 mv $handoverFile $trashBackupFile
                 echo -e "\033[36mMSG   : \033[32mRestored backup ID $2 from trashbin."
               else
-                echo -e "\033[31mError : \033[33mBackup ID $2 from trashbin can't be restored!\n"
+                echo -e "\033[31mError : \033[33mBackup ID $2 from trashbin can't be restored!"
               fi
               list $backupFile
               list $trashBackupFile
             else
-              echo -e "\n\033[31mError : \033[33m'$2' is not an argument for re\n"
+              echo -e "\033[31mError : \033[33m'$2' is not an argument for re"
             fi
             break
             ;;
     ls)     if [[ "$3" != "" ]] ; then
-              echo -e "\n\033[31mError : \033[33mTo many arguments for ls.\n"
+              echo -e "\033[31mError : \033[33mTo many arguments for ls."
               break
             fi
             if [[ "$2" = "" ]] ; then
@@ -983,23 +983,23 @@ while : ; do
             elif [[ "$2" = "deact" ]] ; then
               list $deactBackupFile
             else
-              echo -e "\n\033[31mError : \033[33m'$2' is not an argument for ls\n"
+              echo -e "\033[31mError : \033[33m'$2' is not an argument for ls"
             fi
             break
             ;;
 
     log)    if [[ "$3" != "" ]] ; then
-              echo -e "\n\033[31mError : \033[33mTo many arguments for log.\n"
+              echo -e "\033[31mError : \033[33mTo many arguments for log."
               break
             fi
             if [[ "$2" = "0" || "$2" = "00" ]] ; then
-              echo -e "\n\033[31mError : \033[33mBackup with ID $2 does not exsist!\n"
+              echo -e "\033[31mError : \033[33mBackup with ID $2 does not exists!"
               break
             fi
             if [[ "$2" =~ ^[0-9][0-9]$ ]] || [[ "$2" =~ ^[0-9]$ ]] ; then
               logDest=`jq ".backup[$(($2-1))].destination" $backupFile`
               if [[ "$logDest" = "null" ]] ; then
-                echo -e "\n\033[31mError : \033[33mLOG ID $2 does not exsist!\n"
+                echo -e "\033[31mError : \033[33mLOG ID $2 does not exists!"
                 break
               fi
               logDest=`jq -r ".backup[$(($2-1))].destination" $backupFile`
@@ -1010,14 +1010,14 @@ while : ; do
               fi
               cat * 2>> /dev/null | less
             else
-              echo -e "\n\033[31mError : \033[33m'$2' is not an argument for log\n"
+              echo -e "\033[31mError : \033[33m'$2' is not an argument for log."
             fi
             break
             ;;
 
     -h|--help|help)
             if [[ "$2" != "" ]] ; then
-              echo -e "\n\033[31mError : \033[33mTo many arguments for --help.\n"
+              echo -e "\033[31mError : \033[33mTo many arguments for --help."
               break
             fi
             help
@@ -1026,7 +1026,7 @@ while : ; do
 
     --restoreProgram)
             if [[ "$4" != "" ]] ; then
-              echo -e "\n\033[31mError : \033[33mTo many arguments for --restoreProgram\n"
+              echo -e "\033[31mError : \033[33mTo many arguments for --restoreProgram"
               break
             fi
             if [[ "$3" = "--yes" ]] ; then
@@ -1039,7 +1039,7 @@ while : ; do
               break
             fi
             if [[ "$3" = "" ]] ; then
-              echo -e -n "\n\033[35mQ & A?: \033[33mDo you really want to \033[31mdelete \033[33mthe program files and restore from the file? \033[37m[\033[32my\033[37m/\033[31mN\033[37m] : " ; 
+              echo -e -n "\033[35mQ & A?: \033[33mDo you really want to \033[31mdelete \033[33mthe program files and restore from the file? \033[37m[\033[32my\033[37m/\033[31mN\033[37m] : " ; 
               read option
               case $option in
                 yes|y|Yes|Y)
@@ -1053,28 +1053,28 @@ while : ; do
                                 cp $2 $backupFile
                                 echo -e "\033[36mMSG   : \033[33mRestored!\n"
                               else
-                                echo -e "\n\033[31mError : \033[33mProgram can't be restored, $2 is not a file\n"
+                                echo -e "\033[31mError : \033[33mProgram can't be restored, $2 is not a file."
                               fi
                               ;;
                 *)    echo -e "\n\033[36mMSG   : \033[32mProgram files not deleted!\n"
                       ;;
               esac
             else
-              echo -e "\n\033[31mError : \033[33m'$3' is not an argument for --restoreProgram\n"
+              echo -e "\033[31mError : \033[33m'$3' is not an argument for --restoreProgram."
             fi
             break
             ;;
 
     --deleteAllProgramFiles)
             if [[ "$3" != "" ]] ; then
-              echo -e "\n\033[31mError : \033[33mTo many arguments for --deleteAllProgramFiles.\n"
+              echo -e "\033[31mError : \033[33mTo many arguments for --deleteAllProgramFiles."
               break
             fi
             if [[ "$2" = "--yes" ]] ; then
               rm -rf $programmDir
               break
             fi
-            echo -e -n "\n\033[35mQ & A?: \033[33mDo you really want to \033[31mdelete \033[33mthe programfiles? \033[37m[\033[32my\033[37m/\033[31mN\033[37m] : " ; 
+            echo -e -n "\033[35mQ & A?: \033[33mDo you really want to \033[31mdelete \033[33mthe programfiles? \033[37m[\033[32my\033[37m/\033[31mN\033[37m] : " ; 
             read option
             case $option in
               yes|y|Yes|Y)  echo -e "\n\033[36mMSG   : \033[33mDeleting programfiles..."
@@ -1087,7 +1087,7 @@ while : ; do
             break
             ;;
 
-    *)      echo -e "\n\033[31mError : \033[33mSyntax Error!!\n"
+    *)      echo -e "\033[31mError : \033[33mSyntax Error!!"
             break
             ;;
   esac
