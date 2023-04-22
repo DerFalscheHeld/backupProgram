@@ -204,7 +204,7 @@ function list {
   rm -rf $renderTemp1 $renderTemp2 $renderTemp3
 }
 
-function help {
+function helpPage1 {
 
   echo -e "
   backup [option] [arguments.....]
@@ -242,7 +242,51 @@ function help {
 
     --deleteAllProgramFiles []      >> delete all program Files
                             [--yes] >> ... and skip confirmation by auto-affirming deletion
+  "
+}
 
+function helpPage2 {
+
+  echo -e "
+  flags:
+          arguments are seperated by \"/\"
+          e.g.:   /arg1/arg2/arg3/....
+
+          m[1-31] >>  monthly backup
+
+          w[0-6]  >>  weekly backup
+                      0  1  2  3  4  5  6
+                      Su Mo Tu We Th Fr Sa
+
+          day     >>  daily backup
+
+          copy    >>  Supply source path arg
+                      and an optional destination arg
+
+                      If no destination path is supplied,
+                      the standard path with [name] is used as destination
+
+                      copy <source path> <destination path>
+
+          bash    >>  Argument after bash will executed in bash
+                      Needs to be supplied with '
+                      Will be executed in exec-path
+
+                      bash 'command'
+
+          img     >>  Save backup as .img file
+
+          zip     >>  Save backup as .gz archive
+
+          tar     >>  Save backup as .tar archive
+
+          log     >>  Create log-file in destination folder
+  "
+}
+
+function helpPage3 {
+
+  echo -e "
   example:
   backup prog \033[33m[name] \033[36m[flag] \033[35m[d/w/m_to_keep] \033[34m[source/command] \033[37m[destination/exec-path]
                 |      |          |                |                    |
@@ -255,43 +299,6 @@ function help {
                 |      '->> flags (see below)
                 |
                 '->>  name of backup
-
-
-        flags:
-                arguments are seperated by \"/\"
-                e.g.:   /arg1/arg2/arg3/....
-
-                m[1-31] >>  monthly backup
-
-                w[0-6]  >>  weekly backup
-                            0  1  2  3  4  5  6
-                            Su Mo Tu We Th Fr Sa
-
-                day     >>  daily backup
-
-                copy    >>  Supply source path arg
-                            and an optional destination arg
-
-                            If no destination path is supplied,
-                            the standard path with [name] is used as destination
-
-                            copy <source path> <destination path>
-
-                bash    >>  Argument after bash will executed in bash
-                            Needs to be supplied with '
-                            Will be executed in exec-path
-
-                            bash 'command'
-
-                img     >>  Save backup as .img file
-
-                zip     >>  Save backup as .gz archive
-
-                tar     >>  Save backup as .tar archive
-
-                log     >>  Create log-file in destination folder
-
-
   "
 }
 
@@ -702,7 +709,9 @@ while : ; do
     break
   fi
   if [[ "$1" = "" ]] ; then
-    help
+    helpPage1
+    helpPage2
+    helpPage3
     break
   fi
 
@@ -1016,12 +1025,82 @@ while : ; do
             ;;
 
     -h|--help|help)
-            if [[ "$2" != "" ]] ; then
+            if [[ "$3" != "" ]] ; then
               echo -e "\033[31mError : \033[33mTo many arguments for --help."
               break
+            # Browse help
+            elif [[ "$2" = "" ]] ; then
+              page=1
+
+              tput civis
+              while : ; do
+                  # clear
+                  for i in {1..40}; do
+                      echo "                                                                                                                                             "
+                  done
+                  tput cuu 40
+                  # draw corresponding help page
+                  echo -e "---------------------- Help Page No."$page" ----------------------"
+                  echo -e "----------- Switch page with \"d\" and \"a\" keys. ---------------\n"
+                  case $page in
+                    1)
+                      helpPage1
+                      tput cuu 40
+                      ;;
+                    2)
+                      helpPage2
+                      tput cuu 38
+                      ;;
+                    3)
+                      helpPage3
+                      tput cuu 17
+                      ;;
+                  esac
+                  
+                  # input handling
+                  read -s -n 1 key
+                  if [[ $key = "a" ]] ; then
+                      page=$(($page - 1))
+                      if [[ $page -lt 1 ]] ; then
+                          page=3
+                      elif [[ $page -gt 3 ]]; then
+                          page=1
+                      fi
+                  elif [[ $key = "d" ]] ; then
+                      page=$(($page + 1))
+                      if [[ $page -lt 1 ]] ; then
+                          page=3
+                      elif [[ $page -gt 3 ]]; then
+                          page=1
+                      fi
+                  elif [[ $key = "q" ]] ; then
+                      # clear before exit
+                      for i in {1..40}; do
+                          echo "                                                                                                                                             "
+                      done
+                      tput cuu 40
+                      break;
+                  fi
+              done
+              tput cnorm
+              break
+            # Print help page No.$2
+            elif [[ "$2" = "1" ]] ; then
+              echo -e "----------------- Help Page No.1 -----------------\n"
+              helpPage1
+              break
+            elif [[ "$2" = "2" ]] ; then
+              echo -e "----------------- Help Page No.2 -----------------\n"
+              helpPage2
+              break
+            elif [[ "$2" = "3" ]] ; then
+              echo -e "----------------- Help Page No.3 -----------------\n"
+              helpPage3
+              break
+            else
+              echo -e "\033[31mError : \033[33mHelp page No."$2" doesn't exist."
+              break
             fi
-            help
-            break
             ;;
 
     --restoreProgram)

@@ -204,7 +204,7 @@ function list {
   rm -rf $renderTemp1 $renderTemp2 $renderTemp3
 }
 
-function help {
+function helpPage1 {
 
   echo -e "
   backup [option] [arguments.....]
@@ -242,7 +242,51 @@ function help {
 
     --deleteAllProgramFiles []      >> delete all program Files
                             [--yes] >> ... and skip confirmation by auto-affirming deletion
+  "
+}
 
+function helpPage2 {
+
+  echo -e "
+  flags:
+          arguments are seperated by \"/\"
+          e.g.:   /arg1/arg2/arg3/....
+
+          m[1-31] >>  monthly backup
+
+          w[0-6]  >>  weekly backup
+                      0  1  2  3  4  5  6
+                      Su Mo Tu We Th Fr Sa
+
+          day     >>  daily backup
+
+          copy    >>  Supply source path arg
+                      and an optional destination arg
+
+                      If no destination path is supplied,
+                      the standard path with [name] is used as destination
+
+                      copy <source path> <destination path>
+
+          bash    >>  Argument after bash will executed in bash
+                      Needs to be supplied with '
+                      Will be executed in exec-path
+
+                      bash 'command'
+
+          img     >>  Save backup as .img file
+
+          zip     >>  Save backup as .gz archive
+
+          tar     >>  Save backup as .tar archive
+
+          log     >>  Create log-file in destination folder
+  "
+}
+
+function helpPage3 {
+
+  echo -e "
   example:
   backup prog \033[33m[name] \033[36m[flag] \033[35m[d/w/m_to_keep] \033[34m[source/command] \033[37m[destination/exec-path]
                 |      |          |                |                    |
@@ -255,43 +299,6 @@ function help {
                 |      '->> flags (see below)
                 |
                 '->>  name of backup
-
-
-        flags:
-                arguments are seperated by \"/\"
-                e.g.:   /arg1/arg2/arg3/....
-
-                m[1-31] >>  monthly backup
-
-                w[0-6]  >>  weekly backup
-                            0  1  2  3  4  5  6
-                            Su Mo Tu We Th Fr Sa
-
-                day     >>  daily backup
-
-                copy    >>  Supply source path arg
-                            and an optional destination arg
-
-                            If no destination path is supplied,
-                            the standard path with [name] is used as destination
-
-                            copy <source path> <destination path>
-
-                bash    >>  Argument after bash will executed in bash
-                            Needs to be supplied with '
-                            Will be executed in exec-path
-
-                            bash 'command'
-
-                img     >>  Save backup as .img file
-
-                zip     >>  Save backup as .gz archive
-
-                tar     >>  Save backup as .tar archive
-
-                log     >>  Create log-file in destination folder
-
-
   "
 }
 
@@ -692,22 +699,24 @@ function execution {
 
 while : ; do
   if [[ $UID != 0 ]] ; then
-    echo -e "\n\033[31mError : \033[33mYou are not root!\n"
+    echo -e "\033[31mError : \033[33mYou are not root!\n"
     break
   fi
   touchData
   if [[ $# -eq 7 ]] ; then
-    echo -e "\n\033[31mError : \033[33mTo many arguments!\n"
+    echo -e "\033[31mError : \033[33mTo many arguments!\n"
     break
   fi
   if [[ "$1" = "" ]] ; then
-    help
+    helpPage1
+    helpPage2
+    helpPage3
     break
   fi
 
   while : ; do
     if [[ "`echo $2 | cut -b $count`" = "#" ]] || [[ "`echo $3 | cut -b $count`" = "#" ]] || [[ "`echo $4 | cut -b $count`" = "#" ]] || [[ "`echo $5 | cut -b $count`" = "#" ]] || [[ "`echo $6 | cut -b $count`" = "#" ]] ; then
-      echo -e "\n\033[31mError : \033[33mThe character '#' is not allowed!\n\033[0m"
+      echo -e "\033[31mError : \033[33mThe character '#' is not allowed!\n\033[0m"
       breakval=1
       break
     fi
@@ -737,7 +746,7 @@ while : ; do
 
 
     path)   if [[ "$3" != "" ]] ; then
-              echo -e "\n\033[31mError : \033[33mTo many arguments for path.\n"
+              echo -e "\033[31mError : \033[33mTo many arguments for path.\n"
               break
             fi
 
@@ -746,17 +755,17 @@ while : ; do
               echo $2 > $backupPath
               echo -e "\033[36mMSG   : \033[32mchanged \033[37mstandart backup path to \033[33m$2\n"
             else
-              echo -e "\n\033[31mError : \033[33mPath does not exist!\n"
+              echo -e "\033[31mError : \033[33mPath does not exist!\n"
             fi
             break
             ;;
 
     deact)  if [[ "$3" != "" ]] ; then
-              echo -e "\n\033[31mError : \033[33mTo many arguments for deact.\n"
+              echo -e "\033[31mError : \033[33mTo many arguments for deact.\n"
               break
             fi
             if [[ "$2" = "0" || "$2" = "00" ]] ; then
-              echo -e "\n\033[31mError : \033[33mBackup with ID $2 does not exsist!\n"
+              echo -e "\033[31mError : \033[33mBackup with ID $2 does not exsist!\n"
               break
             fi
             if [[ "$2" =~ ^[0-9][0-9]$ ]] || [[ "$2" =~ ^[0-9]$ ]] ; then
@@ -764,7 +773,7 @@ while : ; do
               deletedLine=`jq .backup[$(($2-1))].name $backupFile`
 
               if [[ "$deletedLine" = "null" ]] ; then
-                echo -e "\n\033[31mError : \033[33mBackup ID $2 does not exsist!\n"
+                echo -e "\033[31mError : \033[33mBackup ID $2 does not exsist!\n"
                 break
               fi
 
@@ -796,18 +805,18 @@ while : ; do
               list $deactBackupFile
 
             else
-              echo -e "\n\033[31mError : \033[33m'$2' is not an argument for deact\n"
+              echo -e "\033[31mError : \033[33m'$2' is not an argument for deact\n"
               break
             fi
             break
             ;;
 
     react)  if [[ "$3" != "" ]] ; then
-              echo -e "\n\033[31mError : \033[33mTo many arguments for react.\n"
+              echo -e "\033[31mError : \033[33mTo many arguments for react.\n"
               break
             fi
             if [[ "$2" = "0" || "$2" = "00" ]] ; then
-              echo -e "\n\033[31mError : \033[33mBackup ID $2 does not exsist in deactivation list!\n"
+              echo -e "\033[31mError : \033[33mBackup ID $2 does not exsist in deactivation list!\n"
               break
             fi
             if [[ "$2" =~ ^[0-9][0-9]$ ]] || [[ "$2" =~ ^[0-9]$ ]] ; then
@@ -815,7 +824,7 @@ while : ; do
               deletedLine=`jq .backup[$(($2-1))].name $deactBackupFile`
 
               if [[ "$deletedLine" = "null" ]] ; then
-                echo -e "\n\033[31mError : \033[33mBackup ID $2 does not exsist in deactivation list\n"
+                echo -e "\033[31mError : \033[33mBackup ID $2 does not exsist in deactivation list\n"
                 break
               fi
 
@@ -839,14 +848,14 @@ while : ; do
               list $backupFile
               list $deactBackupFile
             else
-              echo -e "\n\033[31mError : \033[33m'$2' is not an argument for react\n"
+              echo -e "\033[31mError : \033[33m'$2' is not an argument for react\n"
             fi
             break
             ;;
 
 
     rm)     if [[ "$3" != "" ]] ; then
-              echo -e "\n\033[31mError : \033[33mTo many arguments for rm.\n"
+              echo -e "\033[31mError : \033[33mTo many arguments for rm.\n"
               break
             fi
 
@@ -877,7 +886,7 @@ while : ; do
             fi
 
             if [[ "$2" = "0" || "$2" = "00" ]] ; then
-              echo -e "\n\033[31mError : \033[33mBackup with ID $2 does not exsist!\n"
+              echo -e "\033[31mError : \033[33mBackup with ID $2 does not exsist!\n"
               break
             fi
 
@@ -885,7 +894,7 @@ while : ; do
               deletedLine=`jq .backup[$(($2-1))].name $backupFile`
 
               if [[ "$deletedLine" = "null" ]] ; then
-                echo -e "\n\033[31mError : \033[33mBackup ID $2 does not exsist!\n"
+                echo -e "\033[31mError : \033[33mBackup ID $2 does not exsist!\n"
                 break
               fi
 
@@ -917,7 +926,7 @@ while : ; do
               list $trashBackupFile
 
             else
-              echo -e "\n\033[31mError : \033[33m'$2' is not an argument for rm\n"
+              echo -e "\033[31mError : \033[33m'$2' is not an argument for rm\n"
               break
             fi
             break
@@ -925,12 +934,12 @@ while : ; do
 
 
     re)     if [[ "$3" != "" ]] ; then
-              echo -e "\n\033[31mError : \033[33mTo many arguments for re.\n"
+              echo -e "\033[31mError : \033[33mTo many arguments for re.\n"
               break
             fi
 
             if [[ "$2" = "0" || "$2" = "00" ]] ; then
-              echo -e "\n\033[31mError : \033[33mBackup ID $2 does not exsist in trashbin!\n"
+              echo -e "\033[31mError : \033[33mBackup ID $2 does not exsist in trashbin!\n"
               break
             fi
 
@@ -938,7 +947,7 @@ while : ; do
               deletedLine=`jq .backup[$(($2-1))].name $trashBackupFile`
 
               if [[ "$deletedLine" = "null" ]] ; then
-                echo -e "\n\033[31mError : \033[33mBackup ID $2 does not exsist in trashbin\n"
+                echo -e "\033[31mError : \033[33mBackup ID $2 does not exsist in trashbin\n"
                 break
               fi
 
@@ -962,12 +971,12 @@ while : ; do
               list $backupFile
               list $trashBackupFile
             else
-              echo -e "\n\033[31mError : \033[33m'$2' is not an argument for re\n"
+              echo -e "\033[31mError : \033[33m'$2' is not an argument for re\n"
             fi
             break
             ;;
     ls)     if [[ "$3" != "" ]] ; then
-              echo -e "\n\033[31mError : \033[33mTo many arguments for ls.\n"
+              echo -e "\033[31mError : \033[33mTo many arguments for ls.\n"
               break
             fi
             if [[ "$2" = "" ]] ; then
@@ -981,23 +990,23 @@ while : ; do
             elif [[ "$2" = "deact" ]] ; then
               list $deactBackupFile
             else
-              echo -e "\n\033[31mError : \033[33m'$2' is not an argument for ls\n"
+              echo -e "\033[31mError : \033[33m'$2' is not an argument for ls\n"
             fi
             break
             ;;
 
     log)    if [[ "$3" != "" ]] ; then
-              echo -e "\n\033[31mError : \033[33mTo many arguments for log.\n"
+              echo -e "\033[31mError : \033[33mTo many arguments for log.\n"
               break
             fi
             if [[ "$2" = "0" || "$2" = "00" ]] ; then
-              echo -e "\n\033[31mError : \033[33mBackup with ID $2 does not exsist!\n"
+              echo -e "\033[31mError : \033[33mBackup with ID $2 does not exsist!\n"
               break
             fi
             if [[ "$2" =~ ^[0-9][0-9]$ ]] || [[ "$2" =~ ^[0-9]$ ]] ; then
               logDest=`jq ".backup[$(($2-1))].destination" $backupFile`
               if [[ "$logDest" = "null" ]] ; then
-                echo -e "\n\033[31mError : \033[33mLOG ID $2 does not exsist!\n"
+                echo -e "\033[31mError : \033[33mLOG ID $2 does not exsist!\n"
                 break
               fi
               logDest=`jq -r ".backup[$(($2-1))].destination" $backupFile`
@@ -1008,23 +1017,93 @@ while : ; do
               fi
               cat * 2>> /dev/null | less
             else
-              echo -e "\n\033[31mError : \033[33m'$2' is not an argument for log\n"
+              echo -e "\033[31mError : \033[33m'$2' is not an argument for log\n"
             fi
             break
             ;;
 
     -h|--help|help)
-            if [[ "$2" != "" ]] ; then
-              echo -e "\n\033[31mError : \033[33mTo many arguments for --help.\n"
+            if [[ "$3" != "" ]] ; then
+              echo -e "\033[31mError : \033[33mTo many arguments for --help.\n"
+              break
+            # Browse help
+            elif [[ "$2" = "" ]] ; then
+              page=1
+
+              tput civis
+              while : ; do
+                  # clear
+                  for i in {1..40}; do
+                      echo "                                                                                                                                             "
+                  done
+                  tput cuu 40
+                  # draw corresponding help page
+                  echo -e "---------------------- Help Page No."$page" ----------------------"
+                  echo -e "----------- Switch page with \"d\" and \"a\" keys. ---------------\n"
+                  case $page in
+                    1)
+                      helpPage1
+                      tput cuu 40
+                      ;;
+                    2)
+                      helpPage2
+                      tput cuu 38
+                      ;;
+                    3)
+                      helpPage3
+                      tput cuu 17
+                      ;;
+                  esac
+                  
+                  # input handling
+                  read -s -n 1 key
+                  if [[ $key = "a" ]] ; then
+                      page=$(($page - 1))
+                      if [[ $page -lt 1 ]] ; then
+                          page=3
+                      elif [[ $page -gt 3 ]]; then
+                          page=1
+                      fi
+                  elif [[ $key = "d" ]] ; then
+                      page=$(($page + 1))
+                      if [[ $page -lt 1 ]] ; then
+                          page=3
+                      elif [[ $page -gt 3 ]]; then
+                          page=1
+                      fi
+                  elif [[ $key = "q" ]] ; then
+                      # clear before exit
+                      for i in {1..40}; do
+                          echo "                                                                                                                                             "
+                      done
+                      tput cuu 40
+                      break;
+                  fi
+              done
+              tput cnorm
+              break
+            # Print help page No.$2
+            elif [[ "$2" = "1" ]] ; then
+              echo -e "----------------- Help Page No.1 -----------------\n"
+              helpPage1
+              break
+            elif [[ "$2" = "2" ]] ; then
+              echo -e "----------------- Help Page No.2 -----------------\n"
+              helpPage2
+              break
+            elif [[ "$2" = "3" ]] ; then
+              echo -e "----------------- Help Page No.3 -----------------\n"
+              helpPage3
+              break
+            else
+              echo -e "\033[31mError : \033[33mHelp page No."$2" doesn't exist."
               break
             fi
-            help
-            break
             ;;
 
     --restoreProgram)
             if [[ "$4" != "" ]] ; then
-              echo -e "\n\033[31mError : \033[33mTo many arguments for --restoreProgram\n"
+              echo -e "\033[31mError : \033[33mTo many arguments for --restoreProgram\n"
               break
             fi
             if [[ "$3" = "--yes" ]] ; then
@@ -1051,21 +1130,21 @@ while : ; do
                                 cp $2 $backupFile
                                 echo -e "\033[36mMSG   : \033[33mRestored!\n"
                               else
-                                echo -e "\n\033[31mError : \033[33mProgram can't be restored, $2 is not a file\n"
+                                echo -e "\033[31mError : \033[33mProgram can't be restored, $2 is not a file\n"
                               fi
                               ;;
                 *)    echo -e "\n\033[36mMSG   : \033[32mProgram files not deleted!\n"
                       ;;
               esac
             else
-              echo -e "\n\033[31mError : \033[33m'$3' is not an argument for --restoreProgram\n"
+              echo -e "\033[31mError : \033[33m'$3' is not an argument for --restoreProgram\n"
             fi
             break
             ;;
 
     --deleteAllProgramFiles)
             if [[ "$3" != "" ]] ; then
-              echo -e "\n\033[31mError : \033[33mTo many arguments for --deleteAllProgramFiles.\n"
+              echo -e "\033[31mError : \033[33mTo many arguments for --deleteAllProgramFiles.\n"
               break
             fi
             if [[ "$2" = "--yes" ]] ; then
@@ -1084,7 +1163,7 @@ while : ; do
             break
             ;;
 
-    *)      echo -e "\n\033[31mError : \033[33mSyntax Error!!\n"
+    *)      echo -e "\033[31mError : \033[33mSyntax Error!!\n"
             break
             ;;
   esac
