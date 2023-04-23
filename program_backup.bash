@@ -1002,22 +1002,29 @@ while : ; do
               break
             fi
             if [[ "$2" = "0" || "$2" = "00" ]] ; then
-              echo -e "\033[31mError : \033[33mBackup with ID $2 does not exists!"
+              echo -e "\033[31mError : \033[33mBackup with ID $2 does not exist!"
               break
             fi
             if [[ "$2" =~ ^[0-9][0-9]$ ]] || [[ "$2" =~ ^[0-9]$ ]] ; then
               logDest=`jq ".backup[$(($2-1))].destination" $backupFile`
               if [[ "$logDest" = "null" ]] ; then
-                echo -e "\033[31mError : \033[33mLOG ID $2 does not exists!"
+                echo -e "\033[31mError : \033[33mLog ID $2 does not exist!"
                 break
               fi
               logDest=`jq -r ".backup[$(($2-1))].destination" $backupFile`
               if [[ "`echo $logDest | cut -b 1`" = "*" ]] ; then
-                cd "`cat $backupPath``echo $logDest | cut -b 2-`"
+                if cd "`cat $backupPath``echo $logDest | cut -b 2-`" >> /dev/null 2>&1 ; then
+                  cat * 2>> /dev/null | less
+                else  
+                  echo -e "\033[31mError : \033[33mLogs for '$2' do not exist."
+                fi
               else
-                cd $logDest
+                if cd $logDest >> /dev/null 2>&1 ; then
+                  cat * 2>> /dev/null | less
+                else  
+                  echo -e "\033[31mError : \033[33mLogs for '$2' do not exist."
+                fi
               fi
-              cat * 2>> /dev/null | less
             else
               echo -e "\033[31mError : \033[33m'$2' is not an argument for log."
             fi
@@ -1028,77 +1035,25 @@ while : ; do
             if [[ "$3" != "" ]] ; then
               echo -e "\033[31mError : \033[33mTo many arguments for --help."
               break
+            fi
             # Browse help
-            elif [[ "$2" = "" ]] ; then
-              page=1
-
-              tput civis
-              while : ; do
-                  # clear
-                  for i in {1..40}; do
-                      echo "                                                                                                                                             "
-                  done
-                  tput cuu 40
-                  # draw corresponding help page
-                  echo -e "---------------------- Help Page No."$page" ----------------------"
-                  echo -e "----------- Switch page with \"d\" and \"a\" keys. ---------------\n"
-                  case $page in
-                    1)
-                      helpPage1
-                      tput cuu 40
-                      ;;
-                    2)
-                      helpPage2
-                      tput cuu 38
-                      ;;
-                    3)
-                      helpPage3
-                      tput cuu 17
-                      ;;
-                  esac
-                  
-                  # input handling
-                  read -s -n 1 key
-                  if [[ $key = "a" ]] ; then
-                      page=$(($page - 1))
-                      if [[ $page -lt 1 ]] ; then
-                          page=3
-                      elif [[ $page -gt 3 ]]; then
-                          page=1
-                      fi
-                  elif [[ $key = "d" ]] ; then
-                      page=$(($page + 1))
-                      if [[ $page -lt 1 ]] ; then
-                          page=3
-                      elif [[ $page -gt 3 ]]; then
-                          page=1
-                      fi
-                  elif [[ $key = "q" ]] ; then
-                      # clear before exit
-                      for i in {1..40}; do
-                          echo "                                                                                                                                             "
-                      done
-                      tput cuu 40
-                      break;
-                  fi
-              done
-              tput cnorm
+            if [[ "$2" = "" ]] ; then
+              echo "`helpPage1` `helpPage2` `helpPage3`" | less -R
               break
-            # Print help page No.$2
-            elif [[ "$2" = "1" ]] ; then
-              echo -e "----------------- Help Page No.1 -----------------\n"
+            elif [[ "$2" = "options" ]] ; then
+              echo -e "----------------- Help Page No.1 -----------------"
               helpPage1
               break
-            elif [[ "$2" = "2" ]] ; then
-              echo -e "----------------- Help Page No.2 -----------------\n"
+            elif [[ "$2" = "flags" ]] ; then
+              echo -e "----------------- Help Page No.2 -----------------"
               helpPage2
               break
-            elif [[ "$2" = "3" ]] ; then
-              echo -e "----------------- Help Page No.3 -----------------\n"
+            elif [[ "$2" = "example" ]] ; then
+              echo -e "----------------- Help Page No.3 -----------------"
               helpPage3
               break
             else
-              echo -e "\033[31mError : \033[33mHelp page No."$2" doesn't exist."
+              echo -e "\033[31mError : \033[33mHelp page "$2" doesn't exist."
               break
             fi
             ;;
