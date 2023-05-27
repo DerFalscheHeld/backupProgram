@@ -19,7 +19,7 @@
 # Frankensteins Monster      echo $[test$x=2] >> /dev/null #
 ############################################################
 
-umask 177
+umask 00177
 
 programmDir=/usr/local/etc/backup
 
