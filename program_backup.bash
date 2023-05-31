@@ -149,7 +149,7 @@ function readFlag {
 standardBackuppath=""
 
 function renderListHeader {
-  echo -e "\n\033[0mstandard backup path : `cat $backupPath`\n * means standard backup path"
+  echo -e "\n\033[0mstandard backup path : `cat $backupPath`\n * in destination/exec-path means standard backup path"
   if [[ "$1" = "$trashBackupFile" ]] ; then
     echo -e -n "\n\033[2m\033[33m\033[7m#-#-#-#-#- TRASHBIN -#-#-#-#-#\n\033[0m"
   elif [[ "$1" = "$deactBackupFile" ]] ; then
@@ -229,13 +229,16 @@ function helpPage1 {
 
     react [1-99]   >> Reactivate backup with ID [1-99]
 
-    exec           >> for daily execute use cron syntax | \033[36m0 0 * * * /usr/local/bin/backup exec  \033[37m
+    exec           >> for daily execute use cron syntax \033[35m\"\033[36m0 0 * * * /usr/local/bin/backup exec\033[35m\"\033[0m
 
     execAll        >> execute all backups now
 
     prog           >> programming a new backup
 
-    help / -h / --help      >> shows this screen
+    help / -h / --help []        >> Shows all help pages.
+                       [options] >> Shows help page no.1 (options page)
+                       [flags]   >> Shows help page no.2 (flas page)
+                       [example] >> Shows help page no.3 (example page)
 
     --restoreProgram [file] []      >> Restore program from backup file
                             [--yes] >> ... and skip confirmation by auto-affirming restoration
@@ -249,46 +252,42 @@ function helpPage2 {
 
   echo -e "
   flags:
-          arguments are seperated by \"/\"
-          e.g.:   /arg1/arg2/arg3/....
+    arguments are seperated by \"/\"
+    e.g.:   /flag1/flag2/flag3/....
 
-          m[1-31] >>  monthly backup
+    day     >>  daily backup
 
-          w[0-6]  >>  weekly backup
-                      0  1  2  3  4  5  6
-                      Su Mo Tu We Th Fr Sa
+    m[1-31] >>  monthly backup
 
-          day     >>  daily backup
+    w[0-6]  >>  weekly backup
+                0  1  2  3  4  5  6
+                Su Mo Tu We Th Fr Sa
 
-          copy    >>  Supply source path arg
-                      and an optional destination arg
+    copy    >>  Supply source path argument
+                and an optional destination argument
 
-                      If no destination path is supplied,
-                      the standard path with [name] is used as destination
+                If no destination path is supplied,
+                the standard path with [name] is used as destination
 
-                      copy <source path> <destination path>
+    bash    >>  The command will be executed in bash
+                The command needs to be supplied with '
+                Will be executed in exec-path
 
-          bash    >>  Argument after bash will executed in bash
-                      Needs to be supplied with '
-                      Will be executed in exec-path
+    img     >>  Save data as .img file
 
-                      bash 'command'
+    zip     >>  Save data as .gz archive
 
-          img     >>  Save backup as .img file
+    tar     >>  Save data as .tar archive
 
-          zip     >>  Save backup as .gz archive
-
-          tar     >>  Save backup as .tar archive
-
-          log     >>  Create log-file in destination folder
+    log     >>  Create log-file in destination folder
   "
 }
 
 function helpPage3 {
 
   echo -e "
-  example:
-  backup prog \033[33m[name] \033[36m[flag] \033[35m[d/w/m_to_keep] \033[34m[source/command] \033[37m[destination/exec-path]
+  usage:
+  backup prog \033[33m[name] \033[36m[flag] \033[35m[d/w/m_to_keep] \033[34m[source/command] \033[37m[destination/exec-path]\033[0m
                 |      |          |                |                    |
                 |      |          |                |                    '->> destinaton path from backup
                 |      |          |                |
@@ -296,9 +295,13 @@ function helpPage3 {
                 |      |          |
                 |      |          '->> Number of [days or weeks or months] to keep the old backups
                 |      |
-                |      '->> flags (see below)
+                |      '->> flags (see help page No.2 \"flags\")
                 |
                 '->>  name of backup
+  
+  examples:
+  
+  example : 
   "
 }
 
@@ -446,11 +449,11 @@ function programmBackup {
 
   #Errors ausgeben
   if [[ $name -eq 0 && $namelength -eq 1 ]] ; then
-    echo -e "\n\033[31mError : \033[33mName to long only 1-24 chars!"
+    echo -e "\033[31mError : \033[33mName to long only 1-24 chars!"
   elif [[ $name -eq 0 && $namelength -eq 0 ]] ; then
-    echo -e "\n\033[31mError : \033[33mName exist!"
+    echo -e "\033[31mError : \033[33mName exist!"
   else
-    echo -e "\n\033[36mMSG   : \033[37mName        \033[32mo.k."
+    echo -e "\033[36mMSG   : \033[37mName        \033[32mo.k."
   fi
 
   if [[ $flag -eq 0 && $flagsyntax -eq 1 ]] ; then
@@ -489,13 +492,13 @@ function programmBackup {
   else
     echo -e "\033[36mMSG   : \033[37mDestination \033[32mo.k."
   fi
-  echo #newline after msg and error
 
   if [[ "$4" != "" ]] || [[ "$5" != "" ]] ; then
     if [[ $name -eq 1 && $namelength -eq 0 && $flag -eq 1 && $flagsyntax -eq 0 && $flagTimeLess -eq 0 && $flagTimeMany -eq 0 && $flagError -eq 0 && $number -eq 1 && $sour -eq 1 && $dest -eq 1 && $destsyntax -eq 0 ]] ; then
       reProgram=1
       count=0
       handoverFile=/dev/shm/.backupHandover1.temp
+	  echo #newline after msg and error
       echo -e "\033[36mMSG   : \033[33msaving..."
       while ! [[ "`jq .backup[$count].name $backupFile`" = "null" ]] ; do
         count=$(($count+1))
@@ -513,10 +516,10 @@ function programmBackup {
         fi
       fi
       mv $handoverFile $backupFile
-      echo -e "\033[36mMSG   : \033[32msaved\n"
+      echo -e "\033[36mMSG   : \033[32msaved"
     fi
   else
-    echo -e "\033[31mError : \033[33mTo few arguments\n"
+    echo -e "\033[31mError : \033[33mTo few arguments"
   fi
 }
 
@@ -973,7 +976,7 @@ while : ; do
               list $backupFile
               list $trashBackupFile
             else
-              echo -e "\033[31mError : \033[33m'$2' is not an argument for re"
+              echo -e "\033[31mError : \033[33m'$2' is not an argument for re."
             fi
             break
             ;;
@@ -1041,15 +1044,15 @@ while : ; do
               echo "`helpPage1` `helpPage2` `helpPage3`" | less -R
               break
             elif [[ "$2" = "options" ]] ; then
-              echo -e "----------------- Help Page No.1 -----------------"
+              echo -e "----------------- Help Page No.1 [options] -----------------"
               helpPage1
               break
             elif [[ "$2" = "flags" ]] ; then
-              echo -e "----------------- Help Page No.2 -----------------"
+              echo -e "----------------- Help Page No.2 [ flags ] -----------------"
               helpPage2
               break
             elif [[ "$2" = "example" ]] ; then
-              echo -e "----------------- Help Page No.3 -----------------"
+              echo -e "----------------- Help Page No.3 [example] -----------------"
               helpPage3
               break
             else
@@ -1122,6 +1125,7 @@ while : ; do
             ;;
 
     *)      echo -e "\033[31mError : \033[33mSyntax Error!!"
+            echo -e "\033[36mMSG   : \033[0mUse \"backup help\" to get usage infos."
             break
             ;;
   esac
