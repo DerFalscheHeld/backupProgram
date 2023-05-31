@@ -29,7 +29,7 @@ function load {
 }
 
 if [[ $UID != 0 ]] ; then
-  echo -e "\n\033[31mError : \033[33mYou are not root!\n"
+  echo -e "\033[31mError : \033[33mYou are not root!"
   exit
 fi
 load 10
