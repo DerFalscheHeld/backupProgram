@@ -5,7 +5,7 @@ if [[ $UID != 0 ]] ; then
   exit 1
 fi
 
-umask 0177
+umask 00177
 
 usbBackupPath=/usr/local/etc/usb_backup
 usbBackupFile=$usbBackupPath/usb_backup.json
@@ -91,7 +91,7 @@ function execution {
       jq ".usbBackup[$i].timeout=\"currently_executing\"" $usbBackupFile > $handover
       mv $handover $usbBackupFile
 
-      umask 077
+      umask 00077
       backupTime=`date +"%Y-%m-%d--%H-%M"`
       mntPath=$usbBackupPath/mount/${backupTime}_ID-$ID
       mntPathrm=$usbBackupPath/mount/*
@@ -209,7 +209,7 @@ case $1 in
 
     ls) #lsblk -f
         handover=/dev/shm/.usbbackupHandover.temp
-        echo -e "\033[36m"
+        echo -e -n "\033[36m"
         echo -e "ID#TIMEOUT#DIR#UUID#EXCLUDE\n" > $handover
 
         for i in  $(seq 0 $(($(jq -r .usbBackup[].dir $usbBackupFile | wc -l)-1))) ; do
@@ -228,7 +228,7 @@ case $1 in
 
         column $handover -t -s "#"
         rm $handover
-        echo -e "\033[0m"
+        echo -e -n "\033[0m"
         ;;
 
     rm) if [[ $2 = [0-9][0-9] ]] || [[ $2 = [0-9] ]] ; then
