@@ -148,17 +148,17 @@ function execution {
           sleep 2 ; false #retur error code to echo "Failed 5 times. Skipping unount." >&2
         done || echo "Failed 5 times. Skipping unount." >&2
 
-        H=`date +"%H"`
-        M=$((`date +"%M"`-1))
+        H=`date +"%_H"`
+        M=$((`date +"%_M"`-1))
         if [[ $M -eq -1 ]] ; then
-          H=$H-1
+          H=$(($H-1))
           M=59
           if [[ $H -eq -1 ]] ; then
             H=23
           fi
         fi
 
-        timeAfterBackup=$H:$M
+        timeAfterBackup=`date -d $H:$M +"%H:%M"`
 
         handover=/dev/shm/.usbbackupHandover.temp
         jq ".usbBackup[$i].timeout=\"$timeAfterBackup\"" $usbBackupFile > $handover
