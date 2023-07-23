@@ -19,7 +19,7 @@ fi
 function help {
   backupTime=`date +"%Y-%m-%d--%H-%M"`
   mntPath=$usbBackupPath/mount/${backupTime}_ID1
-  echo -e "
+  echo -e "\033[37m
   usbbackup [option] [arguments.....]
 
   options:

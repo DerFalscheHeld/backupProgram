@@ -19,6 +19,8 @@
 # Frankensteins Monster      echo $[test$x=2] >> /dev/null #
 ############################################################
 
+version=backup-1.0.0
+
 umask 00177
 
 programmDir=/usr/local/etc/backup
@@ -206,22 +208,24 @@ function list {
 
 function helpPage1 {
 
-  echo -e "
+  echo -e "\033[37m
   backup [option] [arguments.....]
 
-  options:
-    ls []       >> lists all programmed backups
-       [trash]  >> lists trashbin
-       [deact]  >> lists all deactivated backups
-       [all]    >> lists all 
+  \033[33m-------------
+  \033[33m|  OPTIONS  |
+  \033[33m-------------\033[37m
+    ls []       >> Lists programmed backups
+       [trash]  >> Lists trashbin
+       [deact]  >> Lists deactivated backups
+       [all]    >> Lists all 
 
-    rm [1-99]   >> delete a programmed backup with that ID [1-99]
-       [trash]  >> delete the trashbin
-       [deact]  >> delete the deactivation list
+    rm [1-99]   >> Delete a programmed backup with ID [1-99]
+       [trash]  >> Delete the trashbin
+       [deact]  >> Delete the deactivation list
 
     re [1-99]   >> Restore backup from trashbin with ID [1-99]
 
-    log [1-99]   >> shows all logs from the ID [1-99] in less
+    log [1-99]   >> Shows all logs from the ID [1-99] in less
 
     path [Path]   >> Change standard backup path
 
@@ -229,21 +233,23 @@ function helpPage1 {
 
     react [1-99]   >> Reactivate backup with ID [1-99]
 
-    exec           >> for daily execute use cron syntax \033[35m\"\033[36m0 0 * * * /usr/local/bin/backup exec\033[35m\"\033[0m
+    exec           >> For daily execute use cron syntax | \033[36m0 0 * * * /usr/local/bin/backup exec \033[37m
 
-    execAll        >> execute all backups now
+    execAll        >> Execute all backups now
 
-    prog           >> programming a new backup
+    prog           >> Programming a new backup - See example and flag page
 
-    help / -h / --help []        >> Shows all help pages.
-                       [options] >> Shows help page no.1 (options page)
-                       [flags]   >> Shows help page no.2 (flas page)
-                       [example] >> Shows help page no.3 (example page)
+    version / --version          >> Shows the program version.
+    
+    help / -h / --help []         >> Shows all help pages.
+                       [options]  >> Shows help page no.1 (options page)
+                       [flags]    >> Shows help page no.2 (flas page)
+                       [examples] >> Shows help page no.3 (examples page)
 
     --restoreProgram [file] []      >> Restore program from backup file
                             [--yes] >> ... and skip confirmation by auto-affirming restoration
 
-    --deleteAllProgramFiles []      >> delete all program Files
+    --deleteAllProgramFiles []      >> Delete all program Files
                             [--yes] >> ... and skip confirmation by auto-affirming deletion
   "
 }
@@ -251,8 +257,10 @@ function helpPage1 {
 function helpPage2 {
 
   echo -e "
-  flags:
-    arguments are seperated by \"/\"
+  \033[33m-----------
+  \033[33m|  FLAGS  |
+  \033[33m-----------\033[37m
+    Arguments are seperated by \"/\"
     e.g.:   /flag1/flag2/flag3/....
 
     day     >>  daily backup
@@ -275,7 +283,7 @@ function helpPage2 {
 
     img     >>  Save data as .img file
 
-    zip     >>  Save data as .gz archive
+    zip     >>  Save data as .gz archive with gzip with single core
 
     tar     >>  Save data as .tar archive
 
@@ -284,24 +292,42 @@ function helpPage2 {
 }
 
 function helpPage3 {
+  helpTime=`date +"%Y-%m-%d--%H-%M"`
+  helpDate=`date +"%Y-%m-%d"`
 
   echo -e "
-  usage:
-  backup prog \033[33m[name] \033[36m[flag] \033[35m[d/w/m_to_keep] \033[34m[source/command] \033[37m[destination/exec-path]\033[0m
+  \033[33m-----------
+  \033[33m|  USAGE  |
+  \033[33m-----------\033[37m
+  backup prog \033[33m[name] \033[36m[flag] \033[35m[d/w/m_to_keep] \033[34m[source/command] \033[37m[destination/exec-path]\033[37m
                 |      |          |                |                    |
                 |      |          |                |                    '->> destinaton path from backup
                 |      |          |                |
                 |      |          |                '->>  source path for backup / command to be executed
                 |      |          |
-                |      |          '->> Number of [days or weeks or months] to keep the old backups
+                |      |          '->> Number of [days or weeks or months] to keep the old backups. Time unit determined by flag argument.
                 |      |
                 |      '->> flags (see help page No.2 \"flags\")
                 |
                 '->>  name of backup
   
-  examples:
+  \033[33m--------------
+  \033[33m|  EXAMPLES  |
+  \033[33m--------------\033[37m
   
-  example : 
+  \033[31m#\033[37m backup prog \033[33mbackup1 \033[36m/day/copy/img/ \033[35m20 \033[34m\"/source_path/\" \033[37m\"/destination/\"\033[37m
+  backup \"source_path\" every day as an .img file into \"/destination/${helpTime}/${helpDate}__start_00-00__end_00-01__name_backup1.img\" and keep the last \033[35m20\033[37m days. 
+  
+  \033[31m#\033[37m backup prog \033[33mbackup1 \033[36m/day/copy/tar/zip/ \033[35m7 \033[34m\"/source_path/\"\033[37m
+  backup \"source_path\" every day as an .tar.gz file into \"standard_backup_path/${helpTime}/${helpDate}__start_00-00__end_00-01__name_backup1.tar.gz\" and keep the last \033[35m7\033[37m days.
+  
+  \033[31m#\033[37m backup prog \033[33mbackup2 \033[36m/w0/bash/ \033[35m3 \033[34m'dd if=/dev/sda1 of=/dev/sda2 bs=512'\033[37m
+  copy devcie sda1 onto sda2 with block size 512 every sunday. Excecute \033[35m\"\033[37m\033[31mroot@${HOSTNAME}\033[37m:\033[34m/standard_backup_path \033[31m#\033[37m dd if=/dev/sda1 of=/dev/sda2 bs=512\033[35m\"\033[37m. Keep the last \033[35m3\033[37m weeks.
+  
+  \033[31m#\033[37m backup prog \033[33mworld1 \033[36m/w1/bash/log/ \033[35m18 \033[34m'/customskript.bash' \033[37m\"/game/gameservers/\"\033[37m
+  backup gameserver with name world1 via a custom skript executed in folder \"/game/gameservers/\". 
+  Do it every Monday create a log file in the destination folder and keep the last \033[35m18\033[37m weeks.
+  
   "
 }
 
@@ -469,7 +495,7 @@ function programmBackup {
   elif [[ $flagTimeMany -eq 1 ]] ; then
     echo -e "\033[31mError : \033[33mFlag \"Backup has to many time specifications for execution!\""
   elif [[ $flagError -eq 1 ]] ; then
-    echo -e "\033[31mError : \033[33mFlag \"You can only use one of 'bash, img, tar, copy, '\"."
+    echo -e "\033[31mError : \033[33mFlags \"bash, img, tar, copy\" are exclusive."
   fi
 
   if [[ $number -eq 0 ]] ; then
@@ -757,7 +783,7 @@ while : ; do
             if test -e $2 && test -d $2 ; then
               echo -e "\033[36mMSG   : \033[32mChanging \033[37mstandard backup path to \033[33m$2"
               echo $2 > $backupPath
-              echo -e "\033[36mMSG   : \033[32mchanged \033[37mstandard backup path to \033[33m$2\n"
+              echo -e "\033[36mMSG   : \033[32mChanged \033[37mstandard backup path to \033[33m$2"
             else
               echo -e "\033[31mError : \033[33mPath does not exist!"
             fi
@@ -1050,8 +1076,8 @@ while : ; do
               echo -e "----------------- Help Page No.2 [ flags ] -----------------"
               helpPage2
               break
-            elif [[ "$2" = "example" ]] ; then
-              echo -e "----------------- Help Page No.3 [example] -----------------"
+            elif [[ "$2" = "examples" ]] ; then
+              echo -e "----------------- Help Page No.3 [examples] -----------------"
               helpPage3
               break
             else
@@ -1083,11 +1109,11 @@ while : ; do
                                 echo -e "\n\033[36mMSG   : \033[33mDeleting program files..."
                                 rm -rf $programmDir
                                 echo -e "\033[36mMSG   : \033[33mProgram files deleted!\n"
-                                echo -e "\n\033[36mMSG   : \033[33mRestore data from file..."
+                                echo -e "\033[36mMSG   : \033[33mRestore data from file..."
                                 mkdir $programmDir
                                 touchData
                                 cp $2 $backupFile
-                                echo -e "\033[36mMSG   : \033[33mRestored!\n"
+                                echo -e "\033[36mMSG   : \033[33mRestored!"
                               else
                                 echo -e "\033[31mError : \033[33mProgram can't be restored, $2 is not a file."
                               fi
@@ -1115,11 +1141,16 @@ while : ; do
             case $option in
               yes|y|Yes|Y)  echo -e "\n\033[36mMSG   : \033[33mDeleting programfiles..."
                             rm -rf $programmDir
-                            echo -e "\033[36mMSG   : \033[33mProgram files deleted!\n"
+                            echo -e "\033[36mMSG   : \033[33mProgram files deleted!"
                             ;;
-              *)    echo -e "\n\033[36mMSG   : \033[32mProgram files not deleted!\n"
+              *)    echo -e "\n\033[36mMSG   : \033[32mProgram files not deleted!"
                     ;;
             esac
+            break
+            ;;
+    
+    version|--version)
+            echo -e "$version"
             break
             ;;
 
