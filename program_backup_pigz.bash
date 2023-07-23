@@ -754,9 +754,9 @@ while : ; do
             fi
 
             if test -e $2 && test -d $2 ; then
-              echo -e "\n\033[36mMSG   : \033[32mChanging \033[37mstandart backup path to \033[33m$2"
+              echo -e "\033[36mMSG   : \033[32mChanging \033[37mstandard backup path to \033[33m$2"
               echo $2 > $backupPath
-              echo -e "\033[36mMSG   : \033[32mchanged \033[37mstandart backup path to \033[33m$2\n"
+              echo -e "\033[36mMSG   : \033[32mchanged \033[37mstandard backup path to \033[33m$2\n"
             else
               echo -e "\033[31mError : \033[33mPath does not exist!"
             fi
