@@ -1,25 +1,11 @@
 #!/bin/bash
 
-#backup [option] [name] [Flags] [days/months - to keep] [Source] [Destinantion]
+# version discription
+# 1.0.2   1 - version of the program
+#         0 - bugfix version of the program
+#         2 - cosmetic change
 
-#Flags:
-
-#  /
-#   m01-31 : monatliches Backup
-#   w0-6   : wöchentliches Backup
-#   day    : dayly Backup
-#   bash   : bash befehl ausführen    ## bach -c "<string>"
-#   copy   : cp befehl
-#   img    : partition / device zu img datei machen
-#   zip    : gzip
-#   tar    : tar
-#   log    : logging
-
-############################################################
-# Frankensteins Monster      echo $[test$x=2] >> /dev/null #
-############################################################
-
-version=backup-1.0.0
+version=backup-1.0.1
 
 umask 00177
 
@@ -52,7 +38,7 @@ function touchData {
   fi
   if ! [ -s $trashBackupFile ] ; then
     jo -p backup=$(jo -a $(jo ID= name= flag= dwmtokeep= source= destination= )) > $trashBackupFile
-  fi  
+  fi
   if ! test -s $backupPath ; then
     touch $backupPath
     echo /root/backup > $backupPath
@@ -168,7 +154,6 @@ function renderListTemp {
   for i in  $(seq 0 $(($(jq -r .backup[].name $1 | wc -l)-1))) ; do
     listName=$(jq .backup[$i].name $1)
     if ! [[ "$listName" = "null" ]] ; then
-      
       info0=$(jq -r ".backup[$i].ID" $1)
       info1=$(jq -r ".backup[$i].name" $1)
       info2=$(jq -r ".backup[$i].flag" $1)
@@ -217,7 +202,7 @@ function helpPage1 {
     ls []       >> Lists programmed backups
        [trash]  >> Lists trashbin
        [deact]  >> Lists deactivated backups
-       [all]    >> Lists all 
+       [all]    >> Lists all
 
     rm [1-99]   >> Delete a programmed backup with ID [1-99]
        [trash]  >> Delete the trashbin
@@ -240,7 +225,7 @@ function helpPage1 {
     prog           >> Programming a new backup - See example and flag page
 
     version / --version          >> Shows the program version.
-    
+
     help / -h / --help []         >> Shows all help pages.
                        [options]  >> Shows help page no.1 (options page)
                        [flags]    >> Shows help page no.2 (flas page)
@@ -274,9 +259,6 @@ function helpPage2 {
     copy    >>  Supply source path argument
                 and an optional destination argument
 
-                If no destination path is supplied,
-                the standard path with [name] is used as destination
-
     bash    >>  The command will be executed in bash
                 The command needs to be supplied with '
                 Will be executed in exec-path
@@ -301,33 +283,36 @@ function helpPage3 {
   \033[33m-----------\033[37m
   backup prog \033[33m[name] \033[36m[flag] \033[35m[d/w/m_to_keep] \033[34m[source/command] \033[37m[destination/exec-path]\033[37m
                 |      |          |                |                    |
-                |      |          |                |                    '->> destinaton path from backup
+                |      |          |                |                    '->> destinaton / exec-path path from backup
+                |      |          |                |                         If no destination path is supplied,
+                |      |          |                |                         the standard path with \033[33m[name]\033[37m is used as destination / exec-path
                 |      |          |                |
-                |      |          |                '->>  source path for backup / command to be executed
+                |      |          |                '->>  \033[34msource path\033[37m for backup / \033[34mcommand\033[37m to be executed
                 |      |          |
-                |      |          '->> Number of [days or weeks or months] to keep the old backups. Time unit determined by flag argument.
+                |      |          '->> Number of \033[36m[days or weeks or months]\033[37m to keep the old backups.
+                |      |               Time unit determined by flag argument.
                 |      |
-                |      '->> flags (see help page No.2 \"flags\")
+                |      '->> \033[36mflags\033[37m (see help page No.2 \"flags\")
                 |
-                '->>  name of backup
-  
+                '->>  \033[33mname\033[37m of backup
+
   \033[33m--------------
   \033[33m|  EXAMPLES  |
   \033[33m--------------\033[37m
-  
+
   \033[31m#\033[37m backup prog \033[33mbackup1 \033[36m/day/copy/img/ \033[35m20 \033[34m\"/source_path/\" \033[37m\"/destination/\"\033[37m
-  backup \"source_path\" every day as an .img file into \"/destination/${helpTime}/${helpDate}__start_00-00__end_00-01__name_backup1.img\" and keep the last \033[35m20\033[37m days. 
-  
+  backup \"source_path\" every day as an .img file into \"/destination/${helpTime}/${helpDate}__start_00-00__end_00-01__name_backup1.img\" and keep the last \033[35m20\033[37m days.
+
   \033[31m#\033[37m backup prog \033[33mbackup1 \033[36m/day/copy/tar/zip/ \033[35m7 \033[34m\"/source_path/\"\033[37m
   backup \"source_path\" every day as an .tar.gz file into \"standard_backup_path/${helpTime}/${helpDate}__start_00-00__end_00-01__name_backup1.tar.gz\" and keep the last \033[35m7\033[37m days.
-  
+
   \033[31m#\033[37m backup prog \033[33mbackup2 \033[36m/w0/bash/ \033[35m3 \033[34m'dd if=/dev/sda1 of=/dev/sda2 bs=512'\033[37m
   copy devcie sda1 onto sda2 with block size 512 every sunday. Excecute \033[35m\"\033[37m\033[31mroot@${HOSTNAME}\033[37m:\033[34m/standard_backup_path \033[31m#\033[37m dd if=/dev/sda1 of=/dev/sda2 bs=512\033[35m\"\033[37m. Keep the last \033[35m3\033[37m weeks.
-  
+
   \033[31m#\033[37m backup prog \033[33mworld1 \033[36m/w1/bash/log/ \033[35m18 \033[34m'/customskript.bash' \033[37m\"/game/gameservers/\"\033[37m
-  backup gameserver with name world1 via a custom skript executed in folder \"/game/gameservers/\". 
+  backup gameserver with name world1 via a custom skript executed in folder \"/game/gameservers/\".
   Do it every Monday create a log file in the destination folder and keep the last \033[35m18\033[37m weeks.
-  
+
   "
 }
 
@@ -384,7 +369,7 @@ function programmBackup {
   else
     flagsyntax=1
   fi
-  
+
   if [[ $flagCheckDay -eq 1 && $flagCheckWeek -eq 1 ]] ; then
     flagTimeMany=1
   elif [[ $flagCheckDay -eq 1 && $flagCheckMonth -eq 1 ]] ; then
@@ -453,7 +438,7 @@ function programmBackup {
       fi
     fi
   done
-  
+
   while : ; do
     if [[ "`echo $5 | cut -b $count`" = "/" && "`echo $5 | cut -b $(($count+1))`" = "/" ]] ; then
       destsyntax=1
@@ -630,7 +615,7 @@ function execution {
 
       if [[ "$flagZip" = "zip" ]] && [[ "$flagTar" = "tar" ]] ; then
         echo "[`date +"%Y-%m-%d %H:%M"`] [tar and gzip] :" >> $execLogfile
-        ( 
+        (
           cd $execSource
           execSourceEmpty=$(echo *) # "*" then its empty
           if [[ "$execSourceEmpty" != "*" ]] ; then
@@ -750,7 +735,7 @@ while : ; do
       breakval=1
       break
     fi
-    if [[ "`echo $2 | cut -b $count`" = "" ]] && [[ "`echo $3 | cut -b $count`" = "" ]] && [[ "`echo $4 | cut -b $count`" = "" ]] && [[ "`echo $5 | cut -b $count`" = "" ]] && [[ "`echo $6 | cut -b $count`" = "" ]] ; then  
+    if [[ "`echo $2 | cut -b $count`" = "" ]] && [[ "`echo $3 | cut -b $count`" = "" ]] && [[ "`echo $4 | cut -b $count`" = "" ]] && [[ "`echo $5 | cut -b $count`" = "" ]] && [[ "`echo $6 | cut -b $count`" = "" ]] ; then
       break
     fi
     count=$(($count+1))
@@ -890,7 +875,7 @@ while : ; do
             fi
 
             if [[ "$2" = "trash" ]] ; then
-              echo -e -n "\033[35mQ & A?: \033[33mDo you really want to \033[31mdelete \033[33mthe trashbin? \033[37m[\033[32my\033[37m/\033[31mN\033[37m] : " ; 
+              echo -e -n "\033[35mQ & A?: \033[33mDo you really want to \033[31mdelete \033[33mthe trashbin? \033[37m[\033[32my\033[37m/\033[31mN\033[37m] : " ;
               read option
               case $option in
                 yes|y|Yes|Y)  echo -e "\n\033[36mMSG   : \033[33mDeleting trashbin..."
@@ -902,7 +887,7 @@ while : ; do
               esac
               break
             elif [[ "$2" = "deact" ]] ; then
-              echo -e -n "\033[35mQ & A?: \033[33mDo you really want to \033[31mdelete \033[33mthe deactivation list? \033[37m[\033[32my\033[37m/\033[31mN\033[37m] : " ; 
+              echo -e -n "\033[35mQ & A?: \033[33mDo you really want to \033[31mdelete \033[33mthe deactivation list? \033[37m[\033[32my\033[37m/\033[31mN\033[37m] : " ;
               read option
               case $option in
                 yes|y|Yes|Y)  echo -e "\n\033[36mMSG   : \033[33mDeleting deactivation list..."
@@ -1043,13 +1028,13 @@ while : ; do
               if [[ "`echo $logDest | cut -b 1`" = "*" ]] ; then
                 if cd "`cat $backupPath``echo $logDest | cut -b 2-`" >> /dev/null 2>&1 ; then
                   cat * 2>> /dev/null | less
-                else  
+                else
                   echo -e "\033[31mError : \033[33mLogs for '$2' do not exist."
                 fi
               else
                 if cd $logDest >> /dev/null 2>&1 ; then
                   cat * 2>> /dev/null | less
-                else  
+                else
                   echo -e "\033[31mError : \033[33mLogs for '$2' do not exist."
                 fi
               fi
@@ -1101,7 +1086,7 @@ while : ; do
               break
             fi
             if [[ "$3" = "" ]] ; then
-              echo -e -n "\033[35mQ & A?: \033[33mDo you really want to \033[31mdelete \033[33mthe program files and restore from the file? \033[37m[\033[32my\033[37m/\033[31mN\033[37m] : " ; 
+              echo -e -n "\033[35mQ & A?: \033[33mDo you really want to \033[31mdelete \033[33mthe program files and restore from the file? \033[37m[\033[32my\033[37m/\033[31mN\033[37m] : " ;
               read option
               case $option in
                 yes|y|Yes|Y)
@@ -1136,7 +1121,7 @@ while : ; do
               rm -rf $programmDir
               break
             fi
-            echo -e -n "\033[35mQ & A?: \033[33mDo you really want to \033[31mdelete \033[33mthe programfiles? \033[37m[\033[32my\033[37m/\033[31mN\033[37m] : " ; 
+            echo -e -n "\033[35mQ & A?: \033[33mDo you really want to \033[31mdelete \033[33mthe programfiles? \033[37m[\033[32my\033[37m/\033[31mN\033[37m] : " ;
             read option
             case $option in
               yes|y|Yes|Y)  echo -e "\n\033[36mMSG   : \033[33mDeleting programfiles..."
@@ -1148,7 +1133,7 @@ while : ; do
             esac
             break
             ;;
-    
+
     version|--version)
             echo -e "$version"
             break
@@ -1163,4 +1148,3 @@ done
 if [[ "$1" != "exec" ]] ; then
   echo -e -n "\033[0m"
 fi
-
