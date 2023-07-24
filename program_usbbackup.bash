@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# version discription
+# 1.0.2   1 - version of the program
+#         0 - bugfix version of the program
+#         2 - cosmetic change
+
+version=usbbackup-1.0.0
+
 if [[ $UID != 0 ]] ; then
   echo -e "\033[31mERROR :\033[33m You are not root!\033[0m" >&2
   exit 1
@@ -253,6 +260,11 @@ case $1 in
         help
         ;;
 
-     *) echo -e "\033[31mERROR :\033[33m Syntax Error!\033[0m" >&2
+    version|--version)
+        echo -e "$version"
+        break
+        ;;
+
+    *)  echo -e "\033[31mERROR :\033[33m Syntax Error!\033[0m" >&2
         ;;
 esac
