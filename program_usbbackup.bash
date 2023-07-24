@@ -262,7 +262,6 @@ case $1 in
 
     version|--version)
         echo -e "$version"
-        break
         ;;
 
     *)  echo -e "\033[31mERROR :\033[33m Syntax Error!\033[0m" >&2
