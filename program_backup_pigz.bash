@@ -5,7 +5,7 @@
 #         0 - bugfix version of the program
 #         2 - cosmetic change
 
-version=backup-pigz-1.0.1
+version=backup-pigz-1.0.2
 
 umask 00177
 
@@ -197,9 +197,9 @@ function helpPage1 {
   echo -e "\033[37m
   backup [option] [arguments.....]
 
-  \033[33m-------------
-  \033[33m|  OPTIONS  |
-  \033[33m-------------\033[37m
+  \033[32m-------------
+  \033[32m|  OPTIONS  |
+  \033[32m-------------\033[37m
     ls []       >> Lists programmed backups
        [trash]  >> Lists trashbin
        [deact]  >> Lists deactivated backups
@@ -243,9 +243,9 @@ function helpPage1 {
 function helpPage2 {
 
   echo -e "
-  \033[33m-----------
-  \033[33m|  FLAGS  |
-  \033[33m-----------\033[37m
+  \033[32m-----------
+  \033[32m|  FLAGS  |
+  \033[32m-----------\033[37m
     Arguments are seperated by \"/\"
     e.g.:   /flag1/flag2/flag3/....
 
@@ -279,9 +279,9 @@ function helpPage3 {
   helpDate=`date +"%Y-%m-%d"`
 
   echo -e "
-  \033[33m-----------
-  \033[33m|  USAGE  |
-  \033[33m-----------\033[37m
+  \033[32m-----------
+  \033[32m|  USAGE  |
+  \033[32m-----------\033[37m
   backup prog \033[33m[name] \033[36m[flag] \033[35m[d/w/m_to_keep] \033[34m[source/command] \033[37m[destination/exec-path]\033[37m
                 |      |          |                |                    |
                 |      |          |                |                    '->> destinaton / exec-path path from backup
@@ -290,16 +290,16 @@ function helpPage3 {
                 |      |          |                |
                 |      |          |                '->>  \033[34msource path\033[37m for backup / \033[34mcommand\033[37m to be executed
                 |      |          |
-                |      |          '->> Number of \033[36m[days or weeks or months]\033[37m to keep the old backups.
+                |      |          '->> \033[35mNumber\033[37m of [days or weeks or months] to keep the old backups.
                 |      |               Time unit determined by flag argument.
                 |      |
                 |      '->> \033[36mflags\033[37m (see help page No.2 \"flags\")
                 |
                 '->>  \033[33mname\033[37m of backup
 
-  \033[33m--------------
-  \033[33m|  EXAMPLES  |
-  \033[33m--------------\033[37m
+  \033[32m--------------
+  \033[32m|  EXAMPLES  |
+  \033[32m--------------\033[37m
 
   \033[31m#\033[37m backup prog \033[33mbackup1 \033[36m/day/copy/img/ \033[35m20 \033[34m\"/source_path/\" \033[37m\"/destination/\"\033[37m
   backup \"source_path\" every day as an .img file into \"/destination/${helpTime}/${helpDate}__start_00-00__end_00-01__name_backup1.img\" and keep the last \033[35m20\033[37m days.
