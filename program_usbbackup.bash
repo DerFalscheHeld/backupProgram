@@ -43,6 +43,8 @@ function help {
 
     resetTimer [1-99] >> reset timer so that this usbbackup will be executed with the next \`usbbackup exec\` call
 
+    version / --version >> Shows the program version.
+
   ------------
   | EXAMPLES |
   ------------
