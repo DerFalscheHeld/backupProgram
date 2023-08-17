@@ -5,7 +5,7 @@
 #         0 - bugfix version of the program
 #         2 - cosmetic change
 
-version=backup-pigz-1.0.2
+version=backup-pigz-1.0.3
 
 umask 00177
 
@@ -149,7 +149,7 @@ function renderListHeader {
 
 function renderListTemp {
 
-  echo -e "\033[32mID#|#\033[33m[name]#\033[36m[flag]#\033[35m[d/w/m_to_keep]#\033[34m[source/command]#\033[37m[destination/exec-path]\n"
+  echo -e "\033[32mID#|#\033[33m[name]#\033[36m[flag]#\033[35m[d/w/m_to_keep]#\033[34m[source/command]#\033[0m[destination/exec-path]\n"
 
   for i in  $(seq 0 $(($(jq -r .backup[].name $1 | wc -l)-1))) ; do
     listName=$(jq .backup[$i].name $1)
@@ -162,7 +162,7 @@ function renderListTemp {
       info4=$(jq -r ".backup[$i].source" $1)
       info5=$(jq -r ".backup[$i].destination" $1)
 
-      echo -e "\033[32m${info0}#|#\033[33m${info1}#\033[36m${info2}#\033[35m${info3}#\033[34m${info4}#\033[37m${info5}"
+      echo -e "\033[32m${info0}#|#\033[33m${info1}#\033[36m${info2}#\033[35m${info3}#\033[34m${info4}#\033[0m${info5}"
 
     fi
   done
@@ -194,12 +194,12 @@ function list {
 
 function helpPage1 {
 
-  echo -e "\033[37m
+  echo -e "\033[0m
   backup [option] [arguments.....]
 
   \033[32m-------------
   \033[32m|  OPTIONS  |
-  \033[32m-------------\033[37m
+  \033[32m-------------\033[0m
     ls []       >> Lists programmed backups
        [trash]  >> Lists trashbin
        [deact]  >> Lists deactivated backups
@@ -219,7 +219,7 @@ function helpPage1 {
 
     react [1-99]   >> Reactivate backup with ID [1-99]
 
-    exec           >> For daily execute use cron syntax | \033[36m0 0 * * * /usr/local/bin/backup exec \033[37m
+    exec           >> For daily execute use cron syntax | \033[36m0 0 * * * /usr/local/bin/backup exec \033[0m
 
     execAll        >> Execute all backups now
 
@@ -245,7 +245,7 @@ function helpPage2 {
   echo -e "
   \033[32m-----------
   \033[32m|  FLAGS  |
-  \033[32m-----------\033[37m
+  \033[32m-----------\033[0m
     Arguments are seperated by \"/\"
     e.g.:   /flag1/flag2/flag3/....
 
@@ -281,38 +281,38 @@ function helpPage3 {
   echo -e "
   \033[32m-----------
   \033[32m|  USAGE  |
-  \033[32m-----------\033[37m
-  backup prog \033[33m[name] \033[36m[flag] \033[35m[d/w/m_to_keep] \033[34m[source/command] \033[37m[destination/exec-path]\033[37m
+  \033[32m-----------\033[0m
+  backup prog \033[33m[name] \033[36m[flag] \033[35m[d/w/m_to_keep] \033[34m[source/command] \033[0m[destination/exec-path]\033[0m
                 |      |          |                |                    |
                 |      |          |                |                    '->> destinaton / exec-path path from backup
                 |      |          |                |                         If no destination path is supplied,
-                |      |          |                |                         the standard path with \033[33m[name]\033[37m is used as destination / exec-path
+                |      |          |                |                         the standard path with \033[33m[name]\033[0m is used as destination / exec-path
                 |      |          |                |
-                |      |          |                '->>  \033[34msource path\033[37m for backup / \033[34mcommand\033[37m to be executed
+                |      |          |                '->>  \033[34msource path\033[0m for backup / \033[34mcommand\033[0m to be executed
                 |      |          |
-                |      |          '->> \033[35mNumber\033[37m of [days or weeks or months] to keep the old backups.
+                |      |          '->> \033[35mNumber\033[0m of [days or weeks or months] to keep the old backups.
                 |      |               Time unit determined by flag argument.
                 |      |
-                |      '->> \033[36mflags\033[37m (see help page No.2 \"flags\")
+                |      '->> \033[36mflags\033[0m (see help page No.2 \"flags\")
                 |
-                '->>  \033[33mname\033[37m of backup
+                '->>  \033[33mname\033[0m of backup
 
   \033[32m--------------
   \033[32m|  EXAMPLES  |
-  \033[32m--------------\033[37m
+  \033[32m--------------\033[0m
 
-  \033[31m#\033[37m backup prog \033[33mbackup1 \033[36m/day/copy/img/ \033[35m20 \033[34m\"/source_path/\" \033[37m\"/destination/\"\033[37m
-  backup \"source_path\" every day as an .img file into \"/destination/${helpTime}/${helpDate}__start_00-00__end_00-01__name_backup1.img\" and keep the last \033[35m20\033[37m days.
+  \033[31m#\033[0m backup prog \033[33mbackup1 \033[36m/day/copy/img/ \033[35m20 \033[34m\"/source_path/\" \033[0m\"/destination/\"\033[0m
+  backup \"source_path\" every day as an .img file into \"/destination/${helpTime}/${helpDate}__start_00-00__end_00-01__name_backup1.img\" and keep the last \033[35m20\033[0m days.
 
-  \033[31m#\033[37m backup prog \033[33mbackup1 \033[36m/day/copy/tar/zip/ \033[35m7 \033[34m\"/source_path/\"\033[37m
-  backup \"source_path\" every day as an .tar.gz file into \"standard_backup_path/${helpTime}/${helpDate}__start_00-00__end_00-01__name_backup1.tar.gz\" and keep the last \033[35m7\033[37m days.
+  \033[31m#\033[0m backup prog \033[33mbackup1 \033[36m/day/copy/tar/zip/ \033[35m7 \033[34m\"/source_path/\"\033[0m
+  backup \"source_path\" every day as an .tar.gz file into \"standard_backup_path/${helpTime}/${helpDate}__start_00-00__end_00-01__name_backup1.tar.gz\" and keep the last \033[35m7\033[0m days.
 
-  \033[31m#\033[37m backup prog \033[33mbackup2 \033[36m/w0/bash/ \033[35m3 \033[34m'dd if=/dev/sda1 of=/dev/sda2 bs=512'\033[37m
-  copy devcie sda1 onto sda2 with block size 512 every sunday. Excecute \033[35m\"\033[37m\033[31mroot@${HOSTNAME}\033[37m:\033[34m/standard_backup_path \033[31m#\033[37m dd if=/dev/sda1 of=/dev/sda2 bs=512\033[35m\"\033[37m. Keep the last \033[35m3\033[37m weeks.
+  \033[31m#\033[0m backup prog \033[33mbackup2 \033[36m/w0/bash/ \033[35m3 \033[34m'dd if=/dev/sda1 of=/dev/sda2 bs=512'\033[0m
+  copy devcie sda1 onto sda2 with block size 512 every sunday. Excecute \033[35m\"\033[0m\033[31mroot@${HOSTNAME}\033[0m:\033[34m/standard_backup_path \033[31m#\033[0m dd if=/dev/sda1 of=/dev/sda2 bs=512\033[35m\"\033[0m. Keep the last \033[35m3\033[0m weeks.
 
-  \033[31m#\033[37m backup prog \033[33mworld1 \033[36m/w1/bash/log/ \033[35m18 \033[34m'/customskript.bash' \033[37m\"/game/gameservers/\"\033[37m
+  \033[31m#\033[0m backup prog \033[33mworld1 \033[36m/w1/bash/log/ \033[35m18 \033[34m'/customskript.bash' \033[0m\"/game/gameservers/\"\033[0m
   backup gameserver with name world1 via a custom skript executed in folder \"/game/gameservers/\".
-  Do it every Monday create a log file in the destination folder and keep the last \033[35m18\033[37m weeks.
+  Do it every Monday create a log file in the destination folder and keep the last \033[35m18\033[0m weeks.
 
   "
 }
@@ -465,7 +465,7 @@ function programmBackup {
   elif [[ $name -eq 0 && $namelength -eq 0 ]] ; then
     echo -e "\033[31mError : \033[33mName exist!"
   else
-    echo -e "\033[36mMSG   : \033[37mName        \033[32mo.k."
+    echo -e "\033[36mMSG   : \033[0mName        \033[32mo.k."
   fi
 
   if [[ $flag -eq 0 && $flagsyntax -eq 1 ]] ; then
@@ -474,7 +474,7 @@ function programmBackup {
     if [[ $flag -eq 0 && $flagsyntax -eq 0 ]] ; then
       echo -e "\033[31mError : \033[33mFlag '$Flag' does not exist!"
     else
-      echo -e "\033[36mMSG   : \033[37mFlags       \033[32mo.k."
+      echo -e "\033[36mMSG   : \033[0mFlags       \033[32mo.k."
     fi
   elif [[ $flagTimeLess -eq 1 ]] ; then
     echo -e "\033[31mError : \033[33mFlag \"Backup has no time specification for execution!\""
@@ -487,12 +487,12 @@ function programmBackup {
   if [[ $number -eq 0 ]] ; then
     echo -e "\033[31mError : \033[33m[d/w/m too keep] needs to be a Number between 0-99!"
   else
-    echo -e "\033[36mMSG   : \033[37mNumber      \033[32mo.k."
+    echo -e "\033[36mMSG   : \033[0mNumber      \033[32mo.k."
   fi
   if [[ $sour -eq 0 ]] ; then
     echo -e "\033[31mError : \033[33mSource path does not exist!"
   else
-    echo -e "\033[36mMSG   : \033[37mSource      \033[32mo.k."
+    echo -e "\033[36mMSG   : \033[0mSource      \033[32mo.k."
   fi
 
   if [[ $dest -eq 0 && $destsyntax -eq 1 ]] ; then
@@ -502,7 +502,7 @@ function programmBackup {
   elif [[ $dest -eq 1 && $destsyntax -eq 1 ]] ; then
     echo -e "\033[31mError : \033[33mInvalid destination path!"
   else
-    echo -e "\033[36mMSG   : \033[37mDestination \033[32mo.k."
+    echo -e "\033[36mMSG   : \033[0mDestination \033[32mo.k."
   fi
 
   if [[ "$4" != "" ]] || [[ "$5" != "" ]] ; then
@@ -766,9 +766,9 @@ while : ; do
             fi
 
             if test -e $2 && test -d $2 ; then
-              echo -e "\033[36mMSG   : \033[32mChanging \033[37mstandard backup path to \033[33m$2"
+              echo -e "\033[36mMSG   : \033[32mChanging \033[0mstandard backup path to \033[33m$2"
               echo $2 > $backupPath
-              echo -e "\033[36mMSG   : \033[32mChanged \033[37mstandard backup path to \033[33m$2"
+              echo -e "\033[36mMSG   : \033[32mChanged \033[0mstandard backup path to \033[33m$2"
             else
               echo -e "\033[31mError : \033[33mPath does not exist!"
             fi
@@ -792,7 +792,7 @@ while : ; do
                 break
               fi
 
-              echo -e "\n\033[36mMSG   : \033[37mDeactivating backup \033[37mID-$2 ..."
+              echo -e "\n\033[36mMSG   : \033[0mDeactivating backup \033[0mID-$2 ..."
 
               handoverFile=/dev/shm/.backupHandover1.temp
               count=0
@@ -814,7 +814,7 @@ while : ; do
               jq " $array.name=null | $array.flag=null | $array.dwmtokeep=null | $array.source=null | $array.destination=null " $backupFile > $handoverFile
               mv $handoverFile $backupFile
 
-              echo -e "\033[36mMSG   : \033[33mDeactivated backup ID-$2\033[37m\n"
+              echo -e "\033[36mMSG   : \033[33mDeactivated backup ID-$2\033[0m\n"
 
               list $backupFile
               list $deactBackupFile
@@ -875,7 +875,7 @@ while : ; do
             fi
 
             if [[ "$2" = "trash" ]] ; then
-              echo -e -n "\n\033[35mQ & A?: \033[33mDo you really want to \033[31mdelete \033[33mthe trashbin? \033[37m[\033[32my\033[37m/\033[31mN\033[37m] : " ;
+              echo -e -n "\n\033[35mQ & A?: \033[33mDo you really want to \033[31mdelete \033[33mthe trashbin? \033[0m[\033[32my\033[0m/\033[31mN\033[0m] : " ;
               read option
               case $option in
                 yes|y|Yes|Y)  echo -e "\n\033[36mMSG   : \033[33mDeleting trashbin..."
@@ -887,7 +887,7 @@ while : ; do
               esac
               break
             elif [[ "$2" = "deact" ]] ; then
-              echo -e -n "\n\033[35mQ & A?: \033[33mDo you really want to \033[31mdelete \033[33mthe deactivation list? \033[37m[\033[32my\033[37m/\033[31mN\033[37m] : " ;
+              echo -e -n "\n\033[35mQ & A?: \033[33mDo you really want to \033[31mdelete \033[33mthe deactivation list? \033[0m[\033[32my\033[0m/\033[31mN\033[0m] : " ;
               read option
               case $option in
                 yes|y|Yes|Y)  echo -e "\n\033[36mMSG   : \033[33mDeleting deactivation list..."
@@ -929,13 +929,13 @@ while : ; do
               jq " $array.ID=$(($count+1)) | $array.name=$deactName | $array.flag=$deactFlag | $array.dwmtokeep=$deactNumber | $array.source=$deactSource | $array.destination=$deactDestination " $trashBackupFile > $handoverFile
               mv $handoverFile $trashBackupFile
 
-              echo -e "\n\033[36mMSG   : \033[37mCopied backup \033[37mID-$2 to trashbin"
+              echo -e "\n\033[36mMSG   : \033[0mCopied backup \033[0mID-$2 to trashbin"
 
               array=".backup[$(($2-1))]"
               jq " $array.name=null | $array.flag=null | $array.dwmtokeep=null | $array.source=null | $array.destination=null " $backupFile > $handoverFile
               mv $handoverFile $backupFile
 
-              echo -e "\033[36mMSG   : \033[33mDeleted ID-$2\033[37m"
+              echo -e "\033[36mMSG   : \033[33mDeleted ID-$2\033[0m"
 
               list $backupFile
               list $trashBackupFile
@@ -1079,7 +1079,7 @@ while : ; do
               break
             fi
             if [[ "$3" = "" ]] ; then
-              echo -e -n "\033[35mQ & A?: \033[33mDo you really want to \033[31mdelete \033[33mthe program files and restore from the file? \033[37m[\033[32my\033[37m/\033[31mN\033[37m] : " ;
+              echo -e -n "\033[35mQ & A?: \033[33mDo you really want to \033[31mdelete \033[33mthe program files and restore from the file? \033[0m[\033[32my\033[0m/\033[31mN\033[0m] : " ;
               read option
               case $option in
                 yes|y|Yes|Y)
@@ -1114,7 +1114,7 @@ while : ; do
               rm -rf $programmDir
               break
             fi
-            echo -e -n "\033[35mQ & A?: \033[33mDo you really want to \033[31mdelete \033[33mthe programfiles? \033[37m[\033[32my\033[37m/\033[31mN\033[37m] : " ;
+            echo -e -n "\033[35mQ & A?: \033[33mDo you really want to \033[31mdelete \033[33mthe programfiles? \033[0m[\033[32my\033[0m/\033[31mN\033[0m] : " ;
             read option
             case $option in
               yes|y|Yes|Y)  echo -e "\n\033[36mMSG   : \033[33mDeleting programfiles..."

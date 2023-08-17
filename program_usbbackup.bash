@@ -5,7 +5,7 @@
 #         0 - bugfix version of the program
 #         2 - cosmetic change
 
-version=usbbackup-1.0.0
+version=usbbackup-1.0.1
 
 if [[ $UID != 0 ]] ; then
   echo -e "\033[31mERROR :\033[33m You are not root!\033[0m" >&2
@@ -26,7 +26,7 @@ fi
 function help {
   backupTime=`date +"%Y-%m-%d--%H-%M"`
   mntPath=$usbBackupPath/mount/${backupTime}_ID1
-  echo -e "\033[37m
+  echo -e "\033[0m
   usbbackup [option] [arguments.....]
 
   options:
@@ -35,7 +35,7 @@ function help {
 
     rm [1-99]        >> delete a usbBackup with that ID [1-99]
 
-    exec []          >> for every minute execute use cron syntax | \033[36m* * * * * /usr/local/bin/usbbackup exec \033[37m
+    exec []          >> for every minute execute use cron syntax | \033[36m* * * * * /usr/local/bin/usbbackup exec \033[0m
          [<command>] >> insert bash command in <command>, this command executes before disk will be mounted
          [<start cmd>] [<end cmd>] >> command <start cmd> executes before disk will be mounted, command <end cmd> executes after disk is unmounted
 
@@ -56,19 +56,19 @@ function help {
       /data1/hello world.txt
 
     EXAMPLE >> $ usbbackup prog 68EE9C02EE9BC72A /data1
-    EXECUTES $ rsync\033[35m --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file \033[36m/data1 \033[37m $mntPath/$HOSTNAME/data1
+    EXECUTES $ rsync\033[35m --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file \033[36m/data1 \033[0m $mntPath/$HOSTNAME/data1
 
-    EXAMPLE >> $ usbbackup prog 68EE9C02EE9BC72A /data1/ \033[32m# preferable, else rsync will create folder $HOSTNAME/data1/data1\033[37m
-    EXECUTES $ rsync\033[35m --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file \033[36m/data1/ \033[37m $mntPath/$HOSTNAME/data1
+    EXAMPLE >> $ usbbackup prog 68EE9C02EE9BC72A /data1/ \033[32m# preferable, else rsync will create folder $HOSTNAME/data1/data1\033[0m
+    EXECUTES $ rsync\033[35m --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file \033[36m/data1/ \033[0m $mntPath/$HOSTNAME/data1
 
     EXAMPLE >> $ usbbackup prog 68EE9C02EE9BC72A /data1/ \"'data2'\"
-    EXECUTES $ rsync\033[35m --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file --exclude=\033[32m{\033[36m'data2'\033[32m}\033[37m \033[36m/data1/ \033[37m $mntPath/$HOSTNAME/data1
+    EXECUTES $ rsync\033[35m --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file --exclude=\033[32m{\033[36m'data2'\033[32m}\033[0m \033[36m/data1/ \033[0m $mntPath/$HOSTNAME/data1
 
     EXAMPLE >> $ usbbackup prog 68EE9C02EE9BC72A /data1/ \"'data2','test.txt'\"
-    EXECUTES $ rsync\033[35m --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file --exclude=\033[32m{\033[36m'data2','test.txt'\033[32m}\033[37m \033[36m/data1/ \033[37m $mntPath/$HOSTNAME/data1
+    EXECUTES $ rsync\033[35m --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file --exclude=\033[32m{\033[36m'data2','test.txt'\033[32m}\033[0m \033[36m/data1/ \033[0m $mntPath/$HOSTNAME/data1
 
     EXAMPLE >> $ usbbackup prog 68EE9C02EE9BC72A /data1/ \"'data2','data3','hello world.txt'\"
-    EXECUTES $ rsync\033[35m --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file --exclude=\033[32m{\033[36m'data2','data3','hello world.txt'\033[32m}\033[37m \033[36m/data1/ \033[37m $mntPath/$HOSTNAME/data1
+    EXECUTES $ rsync\033[35m --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file --exclude=\033[32m{\033[36m'data2','data3','hello world.txt'\033[32m}\033[0m \033[36m/data1/ \033[0m $mntPath/$HOSTNAME/data1
 \033[0m"
 }
 
