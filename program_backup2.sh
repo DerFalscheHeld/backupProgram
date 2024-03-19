@@ -41,7 +41,12 @@ case $1 in
           ;;
 
   exec)   
-          execution >> /dev/null
+          if execution > /dev/null 2>&1 ; then
+            while read line ; do
+              cat $line 1>&2
+            done < $logs_with_errors
+          fi
+          rm -rf $logTempDir
           ;;
 
   execAll)
@@ -336,20 +341,23 @@ case $1 in
             exit_
           fi
           # Browse help
-          if [[ "$2" = "" ]] ; then
-            echo "`helpPage1` `helpPage2` `helpPage3`" | less -R
-          elif [[ "$2" = "options" ]] ; then
-            output "----------------- Help Page No.1 [options] -----------------"
-            output "$(helpPage1)"
-          elif [[ "$2" = "flags" ]] ; then
-            output "----------------- Help Page No.2 [ flags ] -----------------"
-            output "$(helpPage2)"
-          elif [[ "$2" = "examples" ]] ; then
-            output "----------------- Help Page No.3 [examples] -----------------"
-            output "$(helpPage3)"
-          else
-            error "\033[31mError : \033[33mHelp page "$2" doesn't exist."
-          fi
+          case $2 in
+            "")
+              output "`helpPage1` `helpPage2` `helpPage3`"
+              ;;
+            options|option)
+              output "$(helpPage1)"
+              ;;
+            flags|flag)
+              output "$(helpPage2)"
+              ;;
+            examples|example)
+              output "$(helpPage3)"
+              ;;
+            *)
+              error "\033[31mError : \033[33mHelp page "$2" doesn't exist."
+              ;;
+          esac
           ;;
 
   --restoreProgram)

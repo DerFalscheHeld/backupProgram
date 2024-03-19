@@ -16,4 +16,8 @@ function touchData {
     touch $backupPath
     echo /root/backup > $backupPath
   fi
+  if ! [ -s $logs_with_errors ] ; then
+    mkdir -p $logTempDir
+    touch $logs_with_errors
+  fi
 }

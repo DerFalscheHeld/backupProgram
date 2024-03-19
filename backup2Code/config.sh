@@ -14,8 +14,10 @@ trashBackupFile=$programmDir/backupTrash.json
 #zipprogram
 zip="pigz -p$(cat /proc/cpuinfo | grep processor | wc -l)"
 zipProg="pigz"
-#tempDir
-tempDir=/tmp
+
+#log
+logTempDir=/tmp/backup_log
+logs_with_errors=/tmp/backup_log/errorlogfiles
 
 #allgemeine val
 count=1
@@ -48,9 +50,8 @@ flagTar=""
 flagLog=""
 flagImg=""
 
-standardBackuppath=""
-
 #vom re zum checken ob programiert wurde
 reProgram=0
 
 execAllBackups=0
+standardBackuppath=""
