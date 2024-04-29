@@ -4,20 +4,14 @@
 function touchData {
   mkdir -p $programmDir
   if ! [ -s $backupFile ] ; then
-    jo -p backup=$(jo -a $(jo ID= name= flag= dwmtokeep= source= destination= )) > $backupFile
+    mkdir -p $configDir
+    createNewJsonFile
   fi
-  if ! [ -s $deactBackupFile ] ; then
-    jo -p backup=$(jo -a $(jo ID= name= flag= dwmtokeep= source= destination= )) > $deactBackupFile
-  fi
-  if ! [ -s $trashBackupFile ] ; then
-    jo -p backup=$(jo -a $(jo ID= name= flag= dwmtokeep= source= destination= )) > $trashBackupFile
-  fi
-  if ! test -s $backupPath ; then
-    touch $backupPath
-    echo /root/backup > $backupPath
-  fi
-  if ! [ -s $logs_with_errors ] ; then
+}
+
+function touchLogData {
+  if ! [ -s $logsWithErrors ] ; then
     mkdir -p $logTempDir
-    touch $logs_with_errors
+    touch $logsWithErrors
   fi
 }

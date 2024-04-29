@@ -33,9 +33,9 @@ if [[ $UID != 0 ]] ; then
   exit
 fi
 load 10
-path="${0%/*}/program_naslog.bash"
+path="${0%/*}/program_usbbackup.sh"
 load 50
-cp $path /usr/local/bin/naslog
-chmod 755 /usr/local/bin/naslog
+cp $path /usr/local/bin/usbbackup
+chmod 755 /usr/local/bin/usbbackup
 load 100
 echo -e "\033[32m[\033[7mSuccessfully installed\033[0m"

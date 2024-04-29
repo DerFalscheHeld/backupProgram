@@ -33,7 +33,7 @@ if [[ $UID != 0 ]] ; then
   exit
 fi
 load 10
-path="${0%/*}/program_backup_pigz.bash"
+path="${0%/*}/program_backup_pigz.sh"
 load 50
 cp $path /usr/local/bin/backup
 chmod 755 /usr/local/bin/backup

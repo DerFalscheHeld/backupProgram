@@ -1,5 +1,8 @@
 #!/usr/bin/bash
 
+exit=0
+skipRotatingDelete=0
+
 function exit_ {
   clearColor
   exit $exit
@@ -12,6 +15,7 @@ function error {
     echo -e "$1" 1>&2 
   fi
   exit=1
+  progExit=1
 }
 
 function output {
@@ -23,5 +27,5 @@ function output {
 }
 
 function clearColor {
-  echo -e -n "\033[0m"
+  echo -e -n "${resetEND}"
 }

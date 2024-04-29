@@ -5,7 +5,7 @@
 #         0 - bugfix version of the program
 #         2 - cosmetic change
 
-version=usbbackup-1.0.1
+version=usbbackup-1.1.3
 
 if [[ $UID != 0 ]] ; then
   echo -e "\033[31mERROR :\033[33m You are not root!\033[0m" >&2
@@ -20,7 +20,7 @@ count=1
 
 mkdir -p $usbBackupPath
 if ! [ -s $usbBackupFile ] ; then
-  jo -p usbBackup=$(jo -a $(jo ID= timeout= dir= uuid= exclude= )) > $usbBackupFile
+  jo -p usbBackup=$(jo -a $(jo timeout= uuid= dir= exclude= )) > $usbBackupFile
 fi
 
 function help {
@@ -39,7 +39,7 @@ function help {
          [<command>] >> insert bash command in <command>, this command executes before disk will be mounted
          [<start cmd>] [<end cmd>] >> command <start cmd> executes before disk will be mounted, command <end cmd> executes after disk is unmounted
 
-    prog [DIR] [UUID] [EXCLUDE] >> uses this to program a new usbbackup
+    prog [UUID] [DIR] [EXCLUDE] >> uses this to program a new usbbackup
 
     resetTimer [1-99] >> reset timer so that this usbbackup will be executed with the next \`usbbackup exec\` call
 
@@ -76,8 +76,8 @@ function help {
 # $2: variable containing end   command, e.g. '$end_cmd'
 function execution {
   time=`date +"%H:%M"`
-  for i in  $(seq 0 $(( $(jq -r .usbBackup[].ID $usbBackupFile | wc -l)-1))) ; do
-    ID=`jq -r .usbBackup[$i].ID $usbBackupFile`
+  for i in  $(seq 0 $(( $(jq -r .usbBackup[].timeout $usbBackupFile | wc -l)-1))) ; do
+    ID=$(($i+1))
     execDir=`jq -r .usbBackup[$i].dir $usbBackupFile`
     execUUID=`jq -r .usbBackup[$i].uuid $usbBackupFile`
     execExclude=`jq -r .usbBackup[$i].exclude $usbBackupFile`
@@ -116,7 +116,7 @@ function execution {
         mv $handover $usbBackupFile
 
       else
-
+        echo
         # calculate $rsyncPath (path to copy to)
         count2=2
         while : ; do
@@ -146,6 +146,13 @@ function execution {
 
         # write end time to drive
         echo "[`date +"%Y-%m-%d %H:%M"`] [END USB-Backup]" | tee -a $mntPath/$HOSTNAME/backuptime_$rsyncDir.txt
+
+        # scrub a btrfs backup
+        if df --output=fstype $mntPath | grep btrfs > /dev/null 2>&1 ; then
+          echo -e "\nFile system is btrfs performing a scrub!"
+          btrfs scrub start -B -d $mntPath
+          echo
+        fi
 
         # unmount drive
         echo "umount $mntPath"
@@ -199,16 +206,16 @@ case $1 in
         ;;
 
   prog) echo -e -n "\033[33m"
-        if [[ -d "$2" ]] && [[ `lsblk /dev/disk/by-uuid/$3` ]] ; then
-        count=0
-        handover=/dev/shm/.usbbackupHandover.temp
-        while ! [[ "`jq .usbBackup[$count].dir $usbBackupFile`" = "null" ]] ; do
-          count=$(($count+1))
-        done
+        if [[ -d "$3" ]] && [[ `lsblk /dev/disk/by-uuid/$2` ]] ; then
+          count=0
+          handover=/dev/shm/.usbbackupHandover.temp
+          while ! [[ "`jq .usbBackup[$count].dir $usbBackupFile`" = "null" ]] ; do
+            count=$(($count+1))
+          done
 
           #jo -p usbBackup=$(jo -a $(jo ID= timeout= dir= uuid= exclude= )) > $usbBackupFile
           array=".usbBackup[$count]"
-          jq " $array.ID=$(($count+1)) | $array.timeout=\"ready\" | $array.dir=\"$2\" | $array.uuid=\"$3\" | $array.exclude=\"$4\" " $usbBackupFile > $handover
+          jq " $array.timeout=\"ready\" | $array.uuid=\"$2\" | $array.dir=\"$3\" | $array.exclude=\"$4\" " $usbBackupFile > $handover
           mv $handover $usbBackupFile
           echo -e "\033[36mMSG   :\033[32m Saved!\033[0m"
         else
@@ -219,19 +226,18 @@ case $1 in
     ls) #lsblk -f
         handover=/dev/shm/.usbbackupHandover.temp
         echo -e -n "\033[36m"
-        echo -e "ID#TIMEOUT#DIR#UUID#EXCLUDE\n" > $handover
+        echo -e "ID#TIMEOUT#UUID#DIR#EXCLUDE\n" > $handover
 
         for i in  $(seq 0 $(($(jq -r .usbBackup[].dir $usbBackupFile | wc -l)-1))) ; do
           listDir=$(jq .usbBackup[$i].dir $usbBackupFile)
           if ! [[ "$listDir" = "null" ]] ; then
-
-            ID=$(jq -r ".usbBackup[$i].ID" $usbBackupFile)
+            ID=$(($i+1))
             timeout=$(jq -r ".usbBackup[$i].timeout" $usbBackupFile)
-            dir=$(jq -r ".usbBackup[$i].dir" $usbBackupFile)
             uuid=$(jq -r ".usbBackup[$i].uuid" $usbBackupFile)
+            dir=$(jq -r ".usbBackup[$i].dir" $usbBackupFile)
             exclude=$(jq -r ".usbBackup[$i].exclude" $usbBackupFile)
 
-            echo -e "${ID}#${timeout}#${dir}#${uuid}#${exclude}" >> $handover
+            echo -e "${ID}#${timeout}#${uuid}#${dir}#${exclude}" >> $handover
           fi
         done
 
@@ -243,7 +249,7 @@ case $1 in
     rm) if [[ $2 = [0-9][0-9] ]] || [[ $2 = [0-9] ]] ; then
           handover=/dev/shm/.usbbackupHandover.temp
           array=".usbBackup[$(($2-1))]"
-          jq " $array.timeout=null | $array.dir=null | $array.uuid=null | $array.exclude=null " $usbBackupFile > $handover
+          jq "$array=null" $usbBackupFile > $handover
           mv $handover $usbBackupFile
         else
           echo -e "\033[31mERROR :\033[33m '$2' is no argumet for rm\033[0m" >&2
