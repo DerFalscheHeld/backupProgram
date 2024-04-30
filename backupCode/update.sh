@@ -67,8 +67,8 @@ function update_1 {
     fi
     writeConfig backupPath $update_1_path
     output "${cyan}MSG   : ${green}The backup path is in the new config${reset}"
-    
-    #rm $update_1_file $update_1_deactfile $update_1_trashbinfile $update_1_pathfile
+  
+    rm $update_1_file $update_1_deactfile $update_1_trashbinfile $update_1_pathfile
     writeConfig version "backup-2.0.0"
     writeConfig configFileVersion "1.0.0"
     return 0
