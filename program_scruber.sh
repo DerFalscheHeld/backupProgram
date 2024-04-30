@@ -29,7 +29,9 @@ function zpool_scrub {
 
 function btrfs_scrub {
   while read line ; do
-    btrfs scrub start -B -d $(findmnt $line | sed -e '1d' | cut -d' ' -f1 )
+    if ! [[ $(findmnt $line | sed -e '1d' | cut -d' ' -f1 | cut -d'/' -f-5 ) = "/usr/local/etc/usb_backup" ]] ; then
+      btrfs scrub start -B -d $(findmnt $line | sed -e '1d' | cut -d' ' -f1 )
+    fi
   done < <(df -l --output | grep btrfs | cut -d' ' -f1 )
 }
 
