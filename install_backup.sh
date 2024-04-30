@@ -34,8 +34,13 @@ if [[ $UID != 0 ]] ; then
 fi
 load 10
 path="${0%/*}/program_backup.sh"
-load 50
+codePath="${0%/*}/backupCode/*"
+load 30
 cp $path /usr/local/bin/backup
 chmod 755 /usr/local/bin/backup
+load 50
+mkdir /usr/local/etc/backup/code
+cp $codePath /usr/local/etc/backup/code/
+chmod 755 /usr/local/etc/backup/code/*
 load 100
 echo -e "\033[32m[\033[7mSuccessfully installed\033[0m"

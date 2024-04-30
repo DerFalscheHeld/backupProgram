@@ -9,15 +9,15 @@ createTempJsonFileForRead=0
 # $1 [array] $2 [number from array] $3 [value you will read]
 function readFromArray2 {
   if [[ "$2" = "" ]] ; then
-    jq -r .$1[].$3 $backupFile
+    jq -r .$1[].$3 $mainDataFile
   else
-    jq -r .$1[$2].$3 $backupFile
+    jq -r .$1[$2].$3 $mainDataFile
   fi
 }
 
 function readFromArray {
   if [[ $createTempJsonFileForRead -eq 0 ]] ; then
-    tempJsonFileForRead=$(cat $backupFile | jq -r . )
+    tempJsonFileForRead=$(cat $mainDataFile | jq -r . )
     createTempJsonFileForRead=1
   fi
   if [[ "$2" = "" ]] ; then
@@ -30,27 +30,27 @@ function readFromArray {
 # $1 [arrayName] $2 [name=$2] $3 [flag=$3] $4 [dwmtokeep=$4] $5 [source=$5] $6 [destination=$6]
 function writeToArray {
   count=0
-  while ! [[ "`jq .$1[$count].name $backupFile`" = "null" ]] ; do
+  while ! [[ "`jq .$1[$count].name $mainDataFile`" = "null" ]] ; do
     count=$(($count+1))
   done
   array=".$1[$count]"
   shift
-  jsonFile=$(cat $backupFile)
-  echo $jsonFile | jq "$array.name=\"$1\" | $array.flag=\"$2\" | $array.dwmtokeep=\"$3\" | $array.source=\"$4\" | $array.destination=\"$5\"" > $backupFile
+  jsonFile=$(cat $mainDataFile)
+  echo $jsonFile | jq "$array.name=\"$1\" | $array.flag=\"$2\" | $array.dwmtokeep=\"$3\" | $array.source=\"$4\" | $array.destination=\"$5\"" > $mainDataFile
 }
 
 # $1 [array] $2 [number from array]
 # if $2 "" then delete the whole array
 function deletefromArray {
-  tempJsonFile=$(cat $backupFile)
-  echo $tempJsonFile | jq ".$1[$2]=null" | jq "del(..|nulls)" > $backupFile
+  tempJsonFile=$(cat $mainDataFile)
+  echo $tempJsonFile | jq ".$1[$2]=null" | jq "del(..|nulls)" > $mainDataFile
 }
 
 # $1 configname + configvalue separated by =
 function writeConfig {
-  if ! [[ "$(jq .config[0].$1 $backupFile)" = "null" ]] ; then
-    tempJsonFile="$(cat $backupFile)"
-    echo -e $tempJsonFile | jq .config[0].$1=\"$2\" > $backupFile
+  if ! [[ "$(jq .config[0].$1 $mainDataFile)" = "null" ]] ; then
+    tempJsonFile="$(cat $mainDataFile)"
+    echo -e $tempJsonFile | jq .config[0].$1=\"$2\" > $mainDataFile
   else
     error "${red}Error : ${yellow}'$1=$2' is not a config option"
   fi
@@ -60,9 +60,9 @@ function writeConfig {
 # if $1 "" then read the whole array
 function readConfig {
   if [[ "$1" = "" ]] ; then
-    jq -r .config[] $backupFile
+    jq -r .config[] $mainDataFile
   else
-    jq -r .config[0].$1 $backupFile
+    jq -r .config[0].$1 $mainDataFile
   fi
 }
 
@@ -78,5 +78,5 @@ function createNewJsonFile {
             \"zipProgram\": \"$defaultConfigZip\",\
             \"font\": \"$defaultConfigColor\",\
             \"backupPath\": \"$defaultConfigBackupPath\"\
-            }]}" | jq . > $backupFile
+            }]}" | jq . > $mainDataFile
 }

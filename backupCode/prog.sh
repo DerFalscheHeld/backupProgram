@@ -36,6 +36,7 @@ function programmBackup {
 
   #Flag checken
   Flag=`echo $2 | cut -b 1`
+  count=1
   if [[ "$Flag" = "/" ]] ; then
     while : ; do
       count=$(($count+1))
@@ -61,7 +62,6 @@ function programmBackup {
   elif [[ $flagCheckDay -eq 0 && $flagCheckWeek -eq 0 && $flagCheckMonth -eq 0 ]] ; then
     flagTimeLessError=1
   fi
-  count=1
 
   #nicht tar bash copy und img zusammen erlauben
   if [[ $flagToManyTaskError -gt 1 ]] ; then
@@ -76,7 +76,7 @@ function programmBackup {
   fi
 
   #day and month o keep muss eine Nummer sein
-  if ! [[ "$3" =~ ^[0-9]$ ]] || ! [[ "$3" =~ ^[0-9][0-9]$ ]] ; then
+  if ! [[ $3 =~ ^[0-9]$ || $3 =~ ^[0-9][0-9]$ ]] ; then
     numberIsNotANumberError=1
   fi
 
@@ -122,7 +122,8 @@ function programmBackup {
       fi
     fi
   done
-
+  
+  count=1
   while : ; do
     if [[ "`echo $5 | cut -b $count`" = "/" && "`echo $5 | cut -b $(($count+1))`" = "/" ]] ; then
       destinationSyntaxError=1
@@ -139,8 +140,6 @@ function programmBackup {
     fi
     count=$(($count+1))
   done
-  count=1
-
 
   #Error output
 
@@ -167,14 +166,14 @@ function programmBackup {
   elif [[ $flagToManyTaskError -eq 1 ]] ; then
     error "${red}Error : ${yellow}Flags \"bash, img, tar\" are exclusive."
   elif [[ $flagToLessTaskError -eq 1 ]] ; then
-    error "${red}Error : ${yellow}Backup has no Task to do!."
+    error "${red}Error : ${yellow}Backup has no task to do!."
   else 
     output "${cyan}MSG   : ${reset}Flags       ${green}o.k."
   fi
 
   # number errors
   if [[ $numberIsNotANumberError -eq 1 ]] ; then
-    error "${red}Error : ${yellow}[d/w/m too keep] needs to be a Number between 0-99!"
+    error "${red}Error : ${yellow}[d/w/m too keep] needs to be a number between 0-99!"
   else
     output "${cyan}MSG   : ${reset}Number      ${green}o.k."
   fi
@@ -183,7 +182,7 @@ function programmBackup {
   if [[ $sourceIsNotAFileOrDirError -eq 1 ]] ; then
     error "${red}Error : ${yellow}Source path does not exist!"
   elif [[ $sourceBashError -eq 1 ]] ; then
-    error "${red}Error : ${yellow}bash script does not exist!"
+    error "${red}Error : ${yellow}Bash script does not exist!"
   elif [[ $sourceImageError -eq 1 ]] ; then
     error "${red}Error : ${yellow}'$4' is not a block device!"
   elif [[ $sourceEmptyError -eq 1 ]] ; then
@@ -210,7 +209,7 @@ function programmBackup {
   if [[ "$4" != "" ]] || [[ "$5" != "" ]] ; then
     if [[ $nameExistError -eq 0 && $nameEmptyError -eq 0 && $flagTimeNumberError -eq 0 && $flagSyntaxError -eq 0 && $flagTimeLessError -eq 0 && $flagTimeManyError -eq 0 && $flagToManyTaskError -eq 0 && $flagToLessTaskError -eq 0 && $flagZipError -eq 0 && $numberIsNotANumberError -eq 0 && $sourceIsNotAFileOrDirError -eq 0 && $sourceEmptyError -eq 0 && $sourceBashError -eq 0 && $sourceImageError -eq 0 && $destinationExistError -eq 0 && $destinationSyntaxError -eq 0 && $destinationEmptyError -eq 0 ]] ; then
       reProgram=1
-      count=0
+      count=1
       output "${cyan}MSG   : ${yellow}saving..."
       if [[ "$5" = "" ]] ; then
         writeToArray $backupJsonArray "$1" "$2" "$3" "$4" "*/$1"

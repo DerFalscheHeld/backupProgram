@@ -3,7 +3,7 @@
 #Programmdateien erzeugen
 function touchData {
   mkdir -p $programmDir
-  if ! [ -s $backupFile ] ; then
+  if ! [ -s $mainDataFile ] ; then
     mkdir -p $configDir
     createNewJsonFile
   fi
