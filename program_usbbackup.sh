@@ -5,7 +5,7 @@
 #         0 - bugfix version of the program
 #         2 - cosmetic change
 
-version=usbbackup-1.1.3
+version=usbbackup-1.2.3
 
 if [[ $UID != 0 ]] ; then
   echo -e "\033[31mERROR :\033[33m You are not root!\033[0m" >&2
@@ -20,7 +20,7 @@ count=1
 
 mkdir -p $usbBackupPath
 if ! [ -s $usbBackupFile ] ; then
-  jo -p usbBackup=$(jo -a $(jo timeout= uuid= dir= exclude= )) > $usbBackupFile
+  echo "{\"usbBackup\": [] }" | jq > $usbBackupFile
 fi
 
 function help {
