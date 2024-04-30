@@ -39,8 +39,9 @@ load 30
 cp $path /usr/local/bin/backup
 chmod 755 /usr/local/bin/backup
 load 50
-mkdir /usr/local/etc/backup/code
+mkdir -p /usr/local/etc/backup/code
 cp $codePath /usr/local/etc/backup/code/
-chmod 755 /usr/local/etc/backup/code/*
+chmod 755 -R /usr/local/etc/backup/code
+chmod 755 /usr/local/etc/backup
 load 100
 echo -e "\033[32m[\033[7mSuccessfully installed\033[0m"
