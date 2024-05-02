@@ -6,15 +6,6 @@ trashJsonArray="trashbin"
 
 createTempJsonFileForRead=0
 
-# $1 [array] $2 [number from array] $3 [value you will read]
-function readFromArray2 {
-  if [[ "$2" = "" ]] ; then
-    jq -r .$1[].$3 $mainDataFile
-  else
-    jq -r .$1[$2].$3 $mainDataFile
-  fi
-}
-
 function readFromArray {
   if [[ $createTempJsonFileForRead -eq 0 ]] ; then
     tempJsonFileForRead=$(cat $mainDataFile | jq -r . )

@@ -54,11 +54,11 @@ function execution {
       if [[ "$flagBash" = "bash" ]] ; then
         log $execLogFile "${execSource}"
       elif [[ "$flagImg" = "img" ]] && [[ "$flagZip" = "" ]]  ; then
-        log $execLogFile dd if=$execSource of=${date}__start_${execStartTime}__name_${execName}.img.part
+        log $execLogFile dd status=none if=$execSource of=${date}__start_${execStartTime}__name_${execName}.img.part
         execEndTime=`date +"%H-%M"`
         log $execLogFile mv -v ${date}__start_${execStartTime}__name_${execName}.img.part ${date}_${execStartTime}/${date}__start_${execStartTime}__end_${execEndTime}__name_${execName}.img
       elif [[ "$flagImg" = "img" ]] && [[ "$flagZip" = "zip" ]]  ; then
-        log $execLogFile "dd if=$execSource | $zip ${date}__start_${execStartTime}__name_${execName}.img${zipFileExtension}.part"
+        log $execLogFile "dd status=none if=$execSource | $zip ${date}__start_${execStartTime}__name_${execName}.img${zipFileExtension}.part"
         execEndTime=`date +"%H-%M"`
         log $execLogFile mv -v ${date}__start_${execStartTime}__name_${execName}.img${zipFileExtension}.part ${date}__start_${execStartTime}__end_${execEndTime}__name_${execName}.img${zipFileExtension}
       fi
