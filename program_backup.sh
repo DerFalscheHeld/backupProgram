@@ -4,7 +4,7 @@
 #         0 - bugfix version of the program
 #         2 - cosmetic change
 
-version="backup-2.0.0"
+version="backup-2.1.0"
 configFileVersion="1.0.0"
 
 programmDir="/usr/local/etc/backup"
@@ -24,9 +24,7 @@ if [[ $UID != 0 ]] ; then
   exit_
 else
   touchData
-  if update_1 ; then
-    update_version
-  fi
+  update_version
   setConfigVar
 fi
 if [[ $# -ge 7 ]] ; then

@@ -1,5 +1,8 @@
 #!/usr/bin/bash
+
+#update order for a clean update
 function update_version {
+  update_1
   writeConfig version $version
   writeConfig configFileVersion $configFileVersion
 }
