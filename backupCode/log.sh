@@ -35,7 +35,7 @@ function log {
 function logText {
   logfile=$1
   shift
-  echo -e "$@" | sed "s:^:$logStyleInfo[echo] :" | timestamp | tee -a $logfile
+  echo -e "$@" | sed "s:^:$logStyleInfo[backup] :" | timestamp | tee -a $logfile
 }
 
 function timestamp {

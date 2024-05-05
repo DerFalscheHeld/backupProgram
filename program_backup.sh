@@ -4,7 +4,7 @@
 #         0 - bugfix version of the program
 #         2 - cosmetic change
 
-version="backup-2.1.0"
+version="backup-2.1.1"
 configFileVersion="1.0.0"
 
 programmDir="/usr/local/etc/backup"

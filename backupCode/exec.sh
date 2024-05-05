@@ -37,13 +37,13 @@ function execution {
       date=`date +"%Y-%m-%d"`
       execStartTime=`date +"%H-%M"`
       execLogFile="$logTempDir/${date}__start_${execStartTime}__name_$execName.log.temp"
-      
-      logText $execLogFile " Logfile: $execLogFile\n"
+
+      logText $execLogFile "Logfile: $execLogFile\n"
 
       if [[ "`echo "$execPath" | cut -b 1`" = "*" ]] ; then
         execPath="$backupPath$(echo "$execPath" | cut -b 2-)"
       fi
-      
+
       log $execLogFile mkdir -pv "$execPath"
       log $execLogFile cd "$execPath"
       cd "$execPath"
@@ -93,9 +93,10 @@ function execution {
 
       ##  rotating delete  ##
       if [[ $skipRotatingDelete -eq 0 ]] ; then
+        logText $execLogFile ""
         log $execLogFile cd $execPath
         cd $execPath
-        logText $execLogFile "[Backup] : check for old backups"
+        logText $execLogFile "Check for old backups"
         for f in * ; do
           if [[ $f =~ ^[0-9][0-9][0-9][0-9]\-[0-9][0-9]\-[0-9][0-9].*$ ]] ; then
             today_seconds=$(date -d ${date:0:10} +%s)
@@ -103,19 +104,19 @@ function execution {
             if [[ "$flagDay" = "d" ]] ; then
               day=$((24*60*60))
               if [[ $(($today_seconds - $execNumber * $day)) -ge $file_seconds ]] ; then
-                logText $execLogFile "[Backup] : delete old backup: $f"
+                logText $execLogFile "Delete old backup: $f"
                 log $execLogFile rm -rf "$f"
               fi
             elif [[ "$flagWeek" = "w" ]] ; then
               week=$((24*60*60*7))
               if [[ $(($today_seconds - $execNumber * $week)) -ge $file_seconds ]] ; then
-                logText $execLogFile "[Backup] : delete old backup: $f"
+                logText $execLogFile "Delete old backup: $f"
                 log $execLogFile rm -rf "$f"
               fi
             elif [[ "$flagMonth" = "m" ]] ; then
               month=$((24*60*60*31))
               if [[ $(($today_seconds - $execNumber * $month)) -ge $file_seconds ]] ; then
-                logText $execLogFile "[Backup] : delete old backup: $f"
+                logText $execLogFile "Delete old backup: $f"
                 log $execLogFile rm -rf "$f"
               fi
             fi
