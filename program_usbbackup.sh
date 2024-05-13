@@ -5,7 +5,7 @@
 #         0 - bugfix version of the program
 #         2 - cosmetic change
 
-version=usbbackup-1.3.3
+version=usbbackup-1.4.3
 
 if [[ $UID != 0 ]] ; then
   echo -e "\033[31mERROR :\033[33m You are not root!\033[0m" >&2
@@ -26,7 +26,6 @@ mkdir -p $usbBackupConfigPath
 if [ -s /usr/local/etc/usb_backup/usb_backup.json ] ; then
   cp /usr/local/etc/usb_backup/usb_backup.json $usbBackupFile
   rm -rf /usr/local/etc/usb_backup
-  echo 1234
 fi
 
 
