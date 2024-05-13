@@ -14,7 +14,7 @@ function programmBackup {
   flagToManyTaskError=0
   flagZipError=0
   numberIsNotANumberError=0
-  sourceIsNotAFileOrDirError=0
+  sourceIsNotADirError=0
   sourceEmptyError=0
   sourceBashError=0
   sourceImageError=0
@@ -89,8 +89,8 @@ function programmBackup {
     if ! [ -b $4 ] ; then
       sourceImageError=1
     fi
-  elif ! [ -e $4 ] ; then
-    sourceIsNotAFileOrDirError=1
+  elif ! [ -d $4 ] ; then
+    sourceIsNotADirError=1
   fi
   if [[ "$4" = "" ]] ; then
     sourceEmptyError=1
@@ -179,7 +179,7 @@ function programmBackup {
   fi
 
   # source errors
-  if [[ $sourceIsNotAFileOrDirError -eq 1 ]] ; then
+  if [[ $sourceIsNotADirError -eq 1 ]] ; then
     error "${red}Error : ${yellow}Source path does not exist!"
   elif [[ $sourceBashError -eq 1 ]] ; then
     error "${red}Error : ${yellow}Bash script does not exist!"
@@ -207,7 +207,7 @@ function programmBackup {
   fi
 
   if [[ "$4" != "" ]] || [[ "$5" != "" ]] ; then
-    if [[ $nameExistError -eq 0 && $nameEmptyError -eq 0 && $flagTimeNumberError -eq 0 && $flagSyntaxError -eq 0 && $flagTimeLessError -eq 0 && $flagTimeManyError -eq 0 && $flagToManyTaskError -eq 0 && $flagToLessTaskError -eq 0 && $flagZipError -eq 0 && $numberIsNotANumberError -eq 0 && $sourceIsNotAFileOrDirError -eq 0 && $sourceEmptyError -eq 0 && $sourceBashError -eq 0 && $sourceImageError -eq 0 && $destinationExistError -eq 0 && $destinationSyntaxError -eq 0 && $destinationEmptyError -eq 0 ]] ; then
+    if [[ $nameExistError -eq 0 && $nameEmptyError -eq 0 && $flagTimeNumberError -eq 0 && $flagSyntaxError -eq 0 && $flagTimeLessError -eq 0 && $flagTimeManyError -eq 0 && $flagToManyTaskError -eq 0 && $flagToLessTaskError -eq 0 && $flagZipError -eq 0 && $numberIsNotANumberError -eq 0 && $sourceIsNotADirError -eq 0 && $sourceEmptyError -eq 0 && $sourceBashError -eq 0 && $sourceImageError -eq 0 && $destinationExistError -eq 0 && $destinationSyntaxError -eq 0 && $destinationEmptyError -eq 0 ]] ; then
       reProgram=1
       count=1
       output "${cyan}MSG   : ${yellow}saving..."
