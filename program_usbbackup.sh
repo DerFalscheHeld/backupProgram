@@ -5,12 +5,14 @@
 #         0 - bugfix version of the program
 #         2 - cosmetic change
 
-version=usbbackup-1.4.3
+version=usbbackup-1.5.0
 
 if [[ $UID != 0 ]] ; then
   echo -e "\033[31mERROR :\033[33m You are not root!\033[0m" >&2
   exit 1
 fi
+
+set -euo pipefail
 
 umask 00177
 
@@ -33,6 +35,27 @@ if ! [ -s $usbBackupFile ] ; then
   echo "{\"usbBackup\": [] }" | jq > $usbBackupFile
 fi
 
+# JSON file location:
+#   /usr/local/etc/usbbackup/config/usbbackup.json
+#
+# JSON structure (example of one configured backup job)
+# {
+#   "usbBackup": [{
+#     "timeout": "ready",
+#     "dir": "/data/backups/usb_backup/",
+#     "uuid": "42066FAB066F9F23",
+#     "exclude": "'*/0_Papierkorb'",
+#     "last_error": "",
+#     "active_boot_id": "",
+#     "active_mount_path": ""
+#   }]
+# }
+# timeout meaning:
+#   ready                -> run on the next matching usbbackup exec
+#   currently_executing  -> backup is running right now
+#   failed               -> last run ended with an error, resetTimer required
+#   HH:MM                -> scheduled retry time
+
 function help {
   backupTime=`date +"%Y-%m-%d--%H-%M"`
   mntPath=$usbBackupPath/mount/${backupTime}_ID1
@@ -51,7 +74,7 @@ function help {
 
     prog [UUID] [DIR] [EXCLUDE] >> uses this to program a new usbbackup
 
-    resetTimer [1-99] >> reset timer so that this usbbackup will be executed with the next \`usbbackup exec\` call
+    resetTimer [1-99] >> reset failed/currently_executing state so that this usbbackup will be executed with the next \`usbbackup exec\` call
 
     version / --version >> Shows the program version.
 
@@ -92,38 +115,75 @@ function execution {
     execUUID=`jq -r .usbBackup[$i].uuid $usbBackupFile`
     execExclude=`jq -r .usbBackup[$i].exclude $usbBackupFile`
     timeout=`jq -r .usbBackup[$i].timeout $usbBackupFile`
+    activeBootId=`jq -r ".usbBackup[$i].active_boot_id // empty" $usbBackupFile`
+    activeMountPath=`jq -r ".usbBackup[$i].active_mount_path // empty" $usbBackupFile`
+    currentBootId=`cat /proc/sys/kernel/random/boot_id`
+
+    if [[ "$timeout" = "currently_executing" ]] ; then
+      if [[ "$activeBootId" != "" ]] && [[ "$activeBootId" != "$currentBootId" ]] ; then
+        failureMessage="Previous usbbackup run was interrupted by a reboot or power outage."
+      elif [[ "$activeMountPath" != "" ]] && ! findmnt -rn --target "$activeMountPath" > /dev/null 2>&1 ; then
+        failureMessage="Previous usbbackup run was interrupted. Expected mount path is no longer mounted: $activeMountPath"
+      else
+        devicePath=`readlink -f /dev/disk/by-uuid/$execUUID 2> /dev/null || true`
+        if [[ "$activeMountPath" = "" ]] && [[ "$devicePath" != "" ]] && ! findmnt -rn --source "$devicePath" > /dev/null 2>&1 ; then
+          failureMessage="Previous usbbackup run is marked as currently_executing, but the backup disk is not mounted anymore."
+        else
+          failureMessage=""
+        fi
+      fi
+
+      if [[ "$failureMessage" != "" ]] ; then
+        echo -e "\033[31mERROR :\033[33m $failureMessage\033[0m" >&2
+        handover=/dev/shm/.usbbackupHandover.temp
+        jq --arg errorMessage "$failureMessage" ".usbBackup[$i].timeout=\"failed\" | .usbBackup[$i].last_error=\$errorMessage | .usbBackup[$i].active_boot_id=null | .usbBackup[$i].active_mount_path=null" $usbBackupFile > $handover
+        mv $handover $usbBackupFile
+        timeout="failed"
+      fi
+    fi
 
                                      # compatile to older versions
     if [[ "$timeout" = "$time" ]] || [[ "$timeout" = "0" ]] ; then
       handover=/dev/shm/.usbbackupHandover.temp
-      jq ".usbBackup[$i].timeout=\"ready\"" $usbBackupFile > $handover
+      jq ".usbBackup[$i].timeout=\"ready\" | .usbBackup[$i].last_error=\"\" | .usbBackup[$i].active_boot_id=null | .usbBackup[$i].active_mount_path=null" $usbBackupFile > $handover
       mv $handover $usbBackupFile
+      timeout="ready"
     fi
     if lsblk /dev/disk/by-uuid/$execUUID >> /dev/null 2>&1 && [[ "$timeout" = "ready" ]] ; then
       if [[ "$1" != "" ]] ; then
         echo -e "\nexecute start command: $(eval echo $1)"
-        eval eval $1 # double eval: first eval expands '$start_cmd' to real command string, second eval evaluates command
+        # double eval: first eval expands '$start_cmd' to real command string, second eval evaluates command
+        if ! eval eval $1 ; then
+          errorMessage="Start command failed for usbbackup ID $ID."
+          echo -e "\033[31mERROR :\033[33m $errorMessage\033[0m" >&2
+          handover=/dev/shm/.usbbackupHandover.temp
+          jq --arg errorMessage "$errorMessage" ".usbBackup[$i].timeout=\"failed\" | .usbBackup[$i].last_error=\$errorMessage | .usbBackup[$i].active_boot_id=null | .usbBackup[$i].active_mount_path=null" $usbBackupFile > $handover
+          mv $handover $usbBackupFile
+          return 1
+        fi
         echo
       fi
 
       handover=/dev/shm/.usbbackupHandover.temp
-      jq ".usbBackup[$i].timeout=\"currently_executing\"" $usbBackupFile > $handover
-      mv $handover $usbBackupFile
-
       umask 00077
       backupTime=`date +"%Y-%m-%d--%H-%M"`
       mntPath=$usbBackupPath/mount/${backupTime}_ID-$ID
       mntPathrm=$usbBackupPath/mount/*
       mkdir -p $mntPath
+      jq --arg bootId "$currentBootId" --arg mountPath "$mntPath" ".usbBackup[$i].timeout=\"currently_executing\" | .usbBackup[$i].last_error=\"\" | .usbBackup[$i].active_boot_id=\$bootId | .usbBackup[$i].active_mount_path=\$mountPath" $usbBackupFile > $handover
+      mv $handover $usbBackupFile
 
       # mount drive
       echo -e "mount /dev/disk/by-uuid/$execUUID $mntPath\n"
       if ! mount -v /dev/disk/by-uuid/$execUUID $mntPath ; then
-        echo "mount failed!" >&2
+        errorMessage="Mount failed for backup disk UUID $execUUID."
+        echo -e "\033[31mERROR :\033[33m $errorMessage\033[0m" >&2
 
         handover=/dev/shm/.usbbackupHandover.temp
-        jq ".usbBackup[$i].timeout=\"ready\"" $usbBackupFile > $handover
+        jq --arg errorMessage "$errorMessage" ".usbBackup[$i].timeout=\"failed\" | .usbBackup[$i].last_error=\$errorMessage | .usbBackup[$i].active_boot_id=null | .usbBackup[$i].active_mount_path=null" $usbBackupFile > $handover
         mv $handover $usbBackupFile
+        rmdir -p $mntPathrm 2> /dev/null
+        return 1
 
       else
         echo
@@ -144,14 +204,38 @@ function execution {
         echo "[`date +"%Y-%m-%d %H:%M"`] [START USB-Backup]" | tee -a $mntPath/$HOSTNAME/backuptime_$rsyncDir.txt
 
         # run rsync
+        rsyncExitCode=0
         if [[ "$execExclude" = "" ]] ; then
           echo "rsync --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file $execDir $rsyncPath"
-          rsync --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file $execDir $rsyncPath | tee -a $mntPath/$HOSTNAME/backuptime_$rsyncDir.txt
+          if ! rsync --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file $execDir $rsyncPath | tee -a $mntPath/$HOSTNAME/backuptime_$rsyncDir.txt ; then
+            rsyncExitCode=${PIPESTATUS[0]}
+          fi
         else
           rsyncExclude=$(echo -n "$execExclude" | sed -e "s/'\([^']*\)',*/--exclude='\1' /g")
           echo $rsyncExclude
           eval echo rsync --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file $rsyncExclude $execDir $rsyncPath
-          eval rsync --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file $rsyncExclude $execDir $rsyncPath | tee -a $mntPath/$HOSTNAME/backuptime_$rsyncDir.txt
+          if ! eval rsync --archive --copy-links --stats --chown=root:root --chmod=D777,F777 --delete --inplace --whole-file $rsyncExclude $execDir $rsyncPath | tee -a $mntPath/$HOSTNAME/backuptime_$rsyncDir.txt ; then
+            rsyncExitCode=${PIPESTATUS[0]}
+          fi
+        fi
+
+        if [[ $rsyncExitCode -ne 0 ]] ; then
+          errorMessage="rsync failed for usbbackup ID $ID with exit code $rsyncExitCode."
+          echo -e "\033[31mERROR :\033[33m $errorMessage\033[0m" >&2
+          echo "[`date +"%Y-%m-%d %H:%M"`] [FAILED USB-Backup] rsync exit code $rsyncExitCode" | tee -a $mntPath/$HOSTNAME/backuptime_$rsyncDir.txt
+
+          echo "umount $mntPath"
+          for x in {1..5} ; do
+            umount $mntPath && break
+            echo "Failed to unmount drive, retry in 2s.."
+            sleep 2 ; false
+          done || errorMessage="$errorMessage Cleanup could not unmount $mntPath."
+
+          handover=/dev/shm/.usbbackupHandover.temp
+          jq --arg errorMessage "$errorMessage" ".usbBackup[$i].timeout=\"failed\" | .usbBackup[$i].last_error=\$errorMessage | .usbBackup[$i].active_boot_id=null | .usbBackup[$i].active_mount_path=null" $usbBackupFile > $handover
+          mv $handover $usbBackupFile
+          rmdir -p $mntPathrm 2> /dev/null
+          return 1
         fi
 
         # write end time to drive
@@ -160,7 +244,23 @@ function execution {
         # scrub a btrfs backup
         if df --output=fstype $mntPath | grep btrfs > /dev/null 2>&1 ; then
           echo -e "\nFile system is btrfs performing a scrub!"
-          btrfs scrub start -B -d $mntPath
+          if ! btrfs scrub start -B -d $mntPath ; then
+            errorMessage="btrfs scrub failed for mount path $mntPath."
+            echo -e "\033[31mERROR :\033[33m $errorMessage\033[0m" >&2
+
+            echo "umount $mntPath"
+            for x in {1..5} ; do
+              umount $mntPath && break
+              echo "Failed to unmount drive, retry in 2s.."
+              sleep 2 ; false
+            done || errorMessage="$errorMessage Cleanup could not unmount $mntPath."
+
+            handover=/dev/shm/.usbbackupHandover.temp
+            jq --arg errorMessage "$errorMessage" ".usbBackup[$i].timeout=\"failed\" | .usbBackup[$i].last_error=\$errorMessage | .usbBackup[$i].active_boot_id=null | .usbBackup[$i].active_mount_path=null" $usbBackupFile > $handover
+            mv $handover $usbBackupFile
+            rmdir -p $mntPathrm 2> /dev/null
+            return 1
+          fi
           echo
         fi
 
@@ -168,11 +268,26 @@ function execution {
         echo "umount $mntPath"
 
         # try 5 times to unmount with 2s pause in between
+        unmountFailed=1
         for x in {1..5} ; do
-          umount $mntPath && break
+          if umount $mntPath ; then
+            unmountFailed=0
+            break
+          fi
           echo "Failed to unmount drive, retry in 2s.."
-          sleep 2 ; false #retur error code to echo "Failed 5 times. Skipping unount." >&2
-        done || echo "Failed 5 times. Skipping unount." >&2
+          sleep 2
+        done
+
+        if [[ $unmountFailed -ne 0 ]] ; then
+          errorMessage="Unmount failed for mount path $mntPath."
+          echo -e "\033[31mERROR :\033[33m $errorMessage\033[0m" >&2
+
+          handover=/dev/shm/.usbbackupHandover.temp
+          jq --arg errorMessage "$errorMessage" ".usbBackup[$i].timeout=\"failed\" | .usbBackup[$i].last_error=\$errorMessage | .usbBackup[$i].active_boot_id=null | .usbBackup[$i].active_mount_path=null" $usbBackupFile > $handover
+          mv $handover $usbBackupFile
+          rmdir -p $mntPathrm 2> /dev/null
+          return 1
+        fi
 
         H=`date +"%_H"`
         M=$((`date +"%_M"`-1))
@@ -187,14 +302,19 @@ function execution {
         timeAfterBackup=`date -d $H:$M +"%H:%M"`
 
         handover=/dev/shm/.usbbackupHandover.temp
-        jq ".usbBackup[$i].timeout=\"$timeAfterBackup\"" $usbBackupFile > $handover
+        jq ".usbBackup[$i].timeout=\"$timeAfterBackup\" | .usbBackup[$i].last_error=\"\" | .usbBackup[$i].active_boot_id=null | .usbBackup[$i].active_mount_path=null" $usbBackupFile > $handover
         mv $handover $usbBackupFile
       fi
       rmdir -p $mntPathrm 2> /dev/null
 
       if [[ "$2" != "" ]] ; then
         echo -e "\nexecute end command: $(eval echo $2)"
-        eval eval $2 # double eval: first eval expands '$start_cmd' to real command string, second eval evaluates command
+        # double eval: first eval expands '$start_cmd' to real command string, second eval evaluates command
+        if ! eval eval $2 ; then
+          errorMessage="End command failed for usbbackup ID $ID after a successful backup."
+          echo -e "\033[31mERROR :\033[33m $errorMessage\033[0m" >&2
+          return 1
+        fi
         echo
       fi
 
@@ -204,28 +324,27 @@ function execution {
   done
 }
 
-if [[ "$1" = "" ]] ; then
+if [[ "${1:-}" = "" ]] ; then
   help
   exit
 fi
 
-case $1 in
-  exec) start_cmd=$2
-        end_cmd=$3
+case ${1:-} in
+  exec) start_cmd=${2:-}
+        end_cmd=${3:-}
         execution '$start_cmd' '$end_cmd'
         ;;
 
   prog) echo -e -n "\033[33m"
-        if [[ -d "$3" ]] && [[ `lsblk /dev/disk/by-uuid/$2` ]] ; then
+        if [[ -d "${3:-}" ]] && lsblk /dev/disk/by-uuid/${2:-} > /dev/null 2>&1 ; then
           count=0
           handover=/dev/shm/.usbbackupHandover.temp
           while ! [[ "`jq .usbBackup[$count].dir $usbBackupFile`" = "null" ]] ; do
             count=$(($count+1))
           done
 
-          #jo -p usbBackup=$(jo -a $(jo ID= timeout= dir= uuid= exclude= )) > $usbBackupFile
           array=".usbBackup[$count]"
-          jq " $array.timeout=\"ready\" | $array.uuid=\"$2\" | $array.dir=\"$3\" | $array.exclude=\"$4\" " $usbBackupFile > $handover
+          jq " $array.timeout=\"ready\" | $array.uuid=\"${2:-}\" | $array.dir=\"${3:-}\" | $array.exclude=\"${4:-}\" | $array.last_error=\"\" | $array.active_boot_id=null | $array.active_mount_path=null " $usbBackupFile > $handover
           mv $handover $usbBackupFile
           echo -e "\033[36mMSG   :\033[32m Saved!\033[0m"
         else
@@ -236,7 +355,7 @@ case $1 in
     ls) #lsblk -f
         handover=/dev/shm/.usbbackupHandover.temp
         echo -e -n "\033[36m"
-        echo -e "ID#TIMEOUT#UUID#DIR#EXCLUDE\n" > $handover
+        echo -e "ID#TIMEOUT#UUID#DIR#EXCLUDE#LAST_ERROR\n" > $handover
 
         for i in  $(seq 0 $(($(jq -r .usbBackup[].dir $usbBackupFile | wc -l)-1))) ; do
           listDir=$(jq .usbBackup[$i].dir $usbBackupFile)
@@ -246,8 +365,9 @@ case $1 in
             uuid=$(jq -r ".usbBackup[$i].uuid" $usbBackupFile)
             dir=$(jq -r ".usbBackup[$i].dir" $usbBackupFile)
             exclude=$(jq -r ".usbBackup[$i].exclude" $usbBackupFile)
+            lastError=$(jq -r ".usbBackup[$i].last_error // \"\"" $usbBackupFile)
 
-            echo -e "${ID}#${timeout}#${uuid}#${dir}#${exclude}" >> $handover
+            echo -e "${ID}#${timeout}#${uuid}#${dir}#${exclude}#${lastError}" >> $handover
           fi
         done
 
@@ -256,21 +376,22 @@ case $1 in
         echo -e -n "\033[0m"
         ;;
 
-    rm) if [[ $2 = [0-9][0-9] ]] || [[ $2 = [0-9] ]] ; then
+    rm) if [[ ${2:-} = [0-9][0-9] ]] || [[ ${2:-} = [0-9] ]] ; then
           handover=/dev/shm/.usbbackupHandover.temp
-          array=".usbBackup[$(($2-1))]"
+          array=".usbBackup[$((${2:-0}-1))]"
           jq "$array=null" $usbBackupFile > $handover
           mv $handover $usbBackupFile
         else
-          echo -e "\033[31mERROR :\033[33m '$2' is no argumet for rm\033[0m" >&2
+          echo -e "\033[31mERROR :\033[33m '${2:-}' is no argumet for rm\033[0m" >&2
         fi
         ;;
 
-    resetTimer) if [[ $2 = [0-9][0-9] ]] || [[ $2 = [0-9] ]] ; then
-            json_data=$(cat $usbBackupFile)
-            echo $json_data | jq ".usbBackup[$(($2-1))].timeout = \"ready\"" > $usbBackupFile
+    resetTimer) if [[ ${2:-} = [0-9][0-9] ]] || [[ ${2:-} = [0-9] ]] ; then
+            handover=/dev/shm/.usbbackupHandover.temp
+            jq ".usbBackup[$((${2:-0}-1))].timeout = \"ready\" | .usbBackup[$((${2:-0}-1))].last_error = \"\" | .usbBackup[$((${2:-0}-1))].active_boot_id = null | .usbBackup[$((${2:-0}-1))].active_mount_path = null" $usbBackupFile > $handover
+            mv $handover $usbBackupFile
         else
-          echo -e "\033[31mERROR :\033[33m '$2' is no argumet for resetTimer \033[0m" >&2
+          echo -e "\033[31mERROR :\033[33m '${2:-}' is no argument for resetTimer \033[0m" >&2
         fi
         ;;
 
